@@ -1,2 +1,2 @@
-# P1-Sequence-Redes
-Juego de naipes Sequence multijugador
+# P1-Redes
+Juego de naipes multijugador
