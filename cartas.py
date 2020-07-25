@@ -10,3 +10,12 @@ class Carta:
 
 mano = [Carta(1, 'espada'), Carta(10, 'trebol')]
 
+#o bien
+import random
+import itertools
+SUITS = 'cdhs'
+RANKS = '23456789TJQKA'
+DECK = tuple(''.join(card) for card in itertools.product(RANKS, SUITS))
+hand = random.sample(DECK, 5)
+print hand
+['Kh', 'Kc', '6c', '7d', '3d']
