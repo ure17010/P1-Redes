@@ -9,3 +9,4 @@ class Carta:
         return "<Carta %s %s>" % (letra, self.palo)
 
 mano = [Carta(1, 'espada'), Carta(10, 'trebol')]
+
