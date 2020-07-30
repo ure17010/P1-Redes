@@ -40,10 +40,8 @@ def useraccepted(username):
     }
     # serializing dprotocol
     msg = pickle.dumps(dprotocol)
-    print(msg)
     # adding header to msg
     msg = bytes(f"{len(msg):<{HEADER_LENGTH}}", "utf-8") + msg
-    print(msg)
     return msg
 
 def broadcast(username,message):
@@ -54,10 +52,8 @@ def broadcast(username,message):
     }
     # serializing dprotocol
     msg = pickle.dumps(dprotocol)
-    print(msg)
     # adding header to msg
     msg = bytes(f"{len(msg):<{HEADER_LENGTH}}", "utf-8") + msg
-    print(msg)
     return msg
 
 

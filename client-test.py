@@ -8,23 +8,22 @@ HEADER_LENGTH = 10
 IP = "127.0.0.1"
 PORT = 5555
 
-def receive_message(client_socket):
+def receive_message(client_socket,header = ''):
     try:
-        message_header = client_socket.recv(HEADER_LENGTH)
+        if header == '': 
+            message_header = client_socket.recv(HEADER_LENGTH)
+        else:
+            message_header = header
         if not len(message_header):
             return False
         
-        print(f"message_header: {message_header}")
         message_length  = int(message_header.decode('utf-8').strip())
         data = pickle.loads(client_socket.recv(message_length))
-        print(f"data: {data}")
         msg = {"header": message_header, "data": data}
-        print(f"msg: {msg}")
         return {"header": message_header, "data": data}
 
 
-    except Exception as e:
-        print(e)
+    except:
         return False
 
 
@@ -112,18 +111,12 @@ while True:
     try:
         while True:
             # receive things
-            # username_header = client_socket.recv(HEADER_LENGTH)
-            # if not len(username_header):
-            #     print("Connection closed by the server")
-            #     sys.exit()
-            msg = receive_message(client_socket)
-
-            if not len(msg):
+            username_header = client_socket.recv(HEADER_LENGTH)
+            if not len(username_header):
                 print("Connection closed by the server")
                 sys.exit()
 
-            #msg = receive_message(client_socket)
-            print(msg)
+            msg = receive_message(client_socket,username_header)
             username = msg['data']['username']
             message = msg['data']['message']
 
@@ -137,6 +130,6 @@ while True:
         continue
 
 
-    # except Exception as e:
-    #     print('General error', str(e))
-    #     sys.exit()
+    except Exception as e:
+        print('General error', str(e))
+        sys.exit()
