@@ -40,8 +40,10 @@ def useraccepted(username):
     }
     # serializing dprotocol
     msg = pickle.dumps(dprotocol)
+    print(msg)
     # adding header to msg
     msg = bytes(f"{len(msg):<{HEADER_LENGTH}}", "utf-8") + msg
+    #print(msg)
     return msg
 
 def broadcast(username,message):
@@ -52,8 +54,10 @@ def broadcast(username,message):
     }
     # serializing dprotocol
     msg = pickle.dumps(dprotocol)
+    #print(msg)
     # adding header to msg
     msg = bytes(f"{len(msg):<{HEADER_LENGTH}}", "utf-8") + msg
+    #print(msg)
     return msg
 
 
@@ -88,7 +92,7 @@ while True:
 
         else:
             message = receive_message(notified_socket)
-            print(message)
+            #print(message)
 
             if message is False:
                 print(f"Closed connection from {clients[notified_socket]['data']['username']}")

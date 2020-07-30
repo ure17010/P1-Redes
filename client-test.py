@@ -49,6 +49,43 @@ def sendmessage(message):
     msg = bytes(f"{len(msg):<{HEADER_LENGTH}}", "utf-8") + msg
     return msg
 
+def menu():
+    """ Funcion que se encarga del menu del cliente """
+
+    #os.system('clear')  NOTA para windows tienes que cambiar clear por cls
+    print ("Selecciona una opción")
+    print ("\t1 - mandar mensaje")
+    print ("\t2 - revisar la sala de chat")
+    print ("\t3 - salir")
+
+def writing_to_chat():
+    """ Funcion para mandar un mensaje a todos en el room <-? """
+    try:
+        message = input("¿cúal es el mensaje? ")
+        msg = sendmessage(message)
+        client_socket.send(msg)
+        return True
+    except:
+        return False
+
+def see_chat_room():
+    """Funcion para ver mensajes que llegan de otros clientes """
+    try:
+        username_header = client_socket.recv(HEADER_LENGTH)
+        if not len(username_header):
+            print("Connection closed by the server")
+            sys.exit()
+
+        msg = receive_message(client_socket,username_header)
+        username = msg['data']['username']
+        message = msg['data']['message']
+
+        print(f"{username} > {message}")
+
+        return True
+    except:
+        return False
+
 
 # make conncection
 client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -97,39 +134,24 @@ while not signedin:
         print('General error', str(e))
         sys.exit()
 
-
-
-
 while True:
-    message = input(f"{my_username} > ")
+    menu()
+    flag = True
+    while flag:
+        try:
+            optmenu = int(input(f"{my_username} > "))
+            if(optmenu > 3):
+                print("Ingresa un numero del menu")
+                menu()
+            else:
+                flag = False
+        except:
+            print("ingrese una opcion valida")
+            menu()
 
-
-    if message:
-        msg = sendmessage(message)
-        client_socket.send(msg)
-
-    try:
-        while True:
-            # receive things
-            username_header = client_socket.recv(HEADER_LENGTH)
-            if not len(username_header):
-                print("Connection closed by the server")
-                sys.exit()
-
-            msg = receive_message(client_socket,username_header)
-            username = msg['data']['username']
-            message = msg['data']['message']
-
-            print(f"{username} > {message}")
-
-    except IOError as e:
-        # errores de lectura
-        if e.errno != errno.EAGAIN and e.errno != errno.EWOULDBLOCK:
-            print('Reading error',str(e))
-            sys.exit()
-        continue
-
-
-    except Exception as e:
-        print('General error', str(e))
-        sys.exit()
+    if optmenu == 1:
+        if not writing_to_chat():
+            print("Trouble in writting room")
+    elif optmenu == 2:
+        if not see_chat_room():
+            print("No hay mensajes")
