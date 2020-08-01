@@ -46,7 +46,7 @@ def useraccepted(username):
     #print(msg)
     return msg
 
-def broadcast(username,message):
+def broadcast(username,message, myself):
     dprotocol = {
         'type': 'message',
         'username': username,
@@ -58,59 +58,66 @@ def broadcast(username,message):
     # adding header to msg
     msg = bytes(f"{len(msg):<{HEADER_LENGTH}}", "utf-8") + msg
     #print(msg)
-    return msg
+    for client_socket in clients:
+    # send message to every client except the sender
+        if client_socket != myself:
+            client_socket.send(msg)
 
 
-while True:
-    read_sockets, _, exception_sockets = select.select(sockets_list, [], sockets_list)
+if __name__ == "__main__":
+    try:
+        bandera = True
+        while bandera:
+            read_sockets, _, exception_sockets = select.select(sockets_list, [], sockets_list)
 
-    for notified_socket in read_sockets:
+            for notified_socket in read_sockets:
 
-        # cuando alguien se acaba de conectar al server
-        if notified_socket == server_socket:
-            client_socket, client_address = server_socket.accept()
-            user = receive_message(client_socket)
-            if user is False:
-                continue
-            if user['data']['type'] == 'signin':
-                msg = useraccepted(user['data']['username'])
-                # Sending useraccepted
-                client_socket.send(msg)
-
-                # Wait for singinok
-                signinok = False
-                while not signinok:
-                    message = receive_message(client_socket)
-                    if message is False:
+                # cuando alguien se acaba de conectar al server
+                if notified_socket == server_socket:
+                    client_socket, client_address = server_socket.accept()
+                    user = receive_message(client_socket)
+                    if user is False:
                         continue
-                    if message['data']['type'] == "signinok":
-                        signinok = True
-
-                sockets_list.append(client_socket)
-                clients[client_socket] = user
-                print(f"Accepted new connection from {client_address[0]}:{client_address[1]} username: {user['data']['username']}")
-
-        else:
-            message = receive_message(notified_socket)
-            #print(message)
-
-            if message is False:
-                print(f"Closed connection from {clients[notified_socket]['data']['username']}")
-                sockets_list.remove(notified_socket)
-                del clients[notified_socket]
-                continue
-            user = clients[notified_socket]
-            
-            if message['data']['type'] == 'sendmessage':
-                print(f"Received message from {user['data']['username']}: {message['data']['message']}")
-                msg = broadcast(user['data']['username'],message['data']['message'])
-                for client_socket in clients:
-                    # send message to every client except the sender
-                    if client_socket != notified_socket:
+                    if user['data']['type'] == 'signin':
+                        msg = useraccepted(user['data']['username'])
+                        # Sending useraccepted
                         client_socket.send(msg)
-            else:
-                print(f"El tipo de mensaje es: {message['data']['type']}")
 
-        for notified_socket in exception_sockets:
-            sockets_list.remove(notified_socket)
-            del clients[notified_socket]
+                        # Wait for singinok
+                        signinok = False
+                        while not signinok:
+                            message = receive_message(client_socket)
+                            if message is False:
+                                continue
+                            if message['data']['type'] == "signinok":
+                                signinok = True
+
+                        sockets_list.append(client_socket)
+                        clients[client_socket] = user
+                        print(f"Accepted new connection from {client_address[0]}:{client_address[1]} username: {user['data']['username']}")
+
+                else:
+                    message = receive_message(notified_socket)
+                    #print(message)
+
+                    if message is False:
+                        print(f"Closed connection from {clients[notified_socket]['data']['username']}")
+                        sockets_list.remove(notified_socket)
+                        del clients[notified_socket]
+                        continue
+                    user = clients[notified_socket]
+                    
+                    if message['data']['type'] == 'broadcast':
+                        print(f"Received message from {user['data']['username']}: {message['data']['message']}")
+                        msg = broadcast(user['data']['username'],message['data']['message'],notified_socket)
+                    elif message['data']['type'] == 'quit_server':
+                        print("Saliendo del servidor")
+                        bandera = False
+
+                for notified_socket in exception_sockets:
+                    sockets_list.remove(notified_socket)
+                    del clients[notified_socket]
+        exit()
+    except KeyboardInterrupt:
+        print("hasta pronto")
+        exit()

@@ -8,6 +8,22 @@ HEADER_LENGTH = 10
 IP = "127.0.0.1"
 PORT = 5555
 
+# make conncection
+client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+client_socket.connect((IP,PORT))
+client_socket.setblocking(False)
+print(f"Connected to server in {IP}:{PORT}")
+my_username = input("Username: ")
+dprotocol = {
+    'type': 'signin',
+    'username': my_username
+}
+# serializing dprotocol
+msg = pickle.dumps(dprotocol)
+# adding header to msg
+msg = bytes(f"{len(msg):<{HEADER_LENGTH}}", "utf-8") + msg
+client_socket.send(msg)
+
 def receive_message(client_socket,header = ''):
     try:
         if header == '': 
@@ -38,9 +54,9 @@ def signinok(roomID):
     msg = bytes(f"{len(msg):<{HEADER_LENGTH}}", "utf-8") + msg
     return msg
 
-def sendmessage(message):
+def sendmessage(msgtype, message):
     dprotocol = {
-        "type":"sendmessage",
+        "type":msgtype,
         "message": message
     }
     # serializing dprotocol
@@ -62,7 +78,7 @@ def writing_to_chat():
     """ Funcion para mandar un mensaje a todos en el room <-? """
     try:
         message = input("¿cúal es el mensaje? ")
-        msg = sendmessage(message)
+        msg = sendmessage("broadcast", message)
         client_socket.send(msg)
         return True
     except:
@@ -86,72 +102,79 @@ def see_chat_room():
     except:
         return False
 
-
-# make conncection
-client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-client_socket.connect((IP,PORT))
-client_socket.setblocking(False)
-print(f"Connected to server in {IP}:{PORT}")
-signedin = False
-
-my_username = input("Username: ")
-dprotocol = {
-    'type': 'signin',
-    'username': my_username
-}
-# serializing dprotocol
-msg = pickle.dumps(dprotocol)
-# adding header to msg
-msg = bytes(f"{len(msg):<{HEADER_LENGTH}}", "utf-8") + msg
-client_socket.send(msg)
-
-while not signedin:
+def quit_server():
+    """Funcion especial para apagar servidor desde cliente"""
     try:
-        while True:
-            #wait for useraccepted
-            message = receive_message(client_socket)
-            if message:
-                if message['data']['username'] == my_username:
-                    # send signinok
-                    print(f"Singned in server @{IP}:{PORT} as {my_username}")
-                    msg = signinok(message['data']['roomID'])
-                    client_socket.send(msg)
-                    signedin = True
-                    break
-                else:
-                    print(f"Server thought you were {message['data']['username']}")
-                    print("Disconnecting...")
-                    sys.exit()
+        msg = sendmessage("quit_server", "")
+        client_socket.send(msg)
+        return True
+    except:
+        return False
 
-    except IOError as e:
-        # errores de lectura
-        if e.errno != errno.EAGAIN and e.errno != errno.EWOULDBLOCK:
-            print('Reading error',str(e))
-            sys.exit()
-        continue
-
-    except Exception as e:
-        print('General error', str(e))
-        sys.exit()
-
-while True:
-    menu()
-    flag = True
-    while flag:
+def client_on():
+    signedin = False
+    client_on = True
+    while not signedin:
         try:
-            optmenu = int(input(f"{my_username} > "))
-            if(optmenu > 3):
-                print("Ingresa un numero del menu")
-                menu()
-            else:
-                flag = False
-        except:
-            print("ingrese una opcion valida")
-            menu()
+            while True:
+                #wait for useraccepted
+                message = receive_message(client_socket)
+                if message:
+                    if message['data']['username'] == my_username:
+                        # send signinok
+                        print(f"Singned in server @{IP}:{PORT} as {my_username}")
+                        msg = signinok(message['data']['roomID'])
+                        client_socket.send(msg)
+                        signedin = True
+                        break
+                    else:
+                        print(f"Server thought you were {message['data']['username']}")
+                        print("Disconnecting...")
+                        sys.exit()
 
-    if optmenu == 1:
-        if not writing_to_chat():
-            print("Trouble in writting room")
-    elif optmenu == 2:
-        if not see_chat_room():
-            print("No hay mensajes")
+        except IOError as e:
+            # errores de lectura
+            if e.errno != errno.EAGAIN and e.errno != errno.EWOULDBLOCK:
+                print('Reading error',str(e))
+                sys.exit()
+            continue
+
+        except Exception as e:
+            print('General error', str(e))
+            sys.exit()
+
+    while client_on:
+        menu()
+        flag = True
+        while flag:
+            try:
+                optmenu = int(input(f"{my_username} > "))
+                if(optmenu > 3):
+                    print("Ingresa un numero del menu")
+                    menu()
+                else:
+                    flag = False
+            except:
+                print("ingrese una opcion valida")
+                menu()
+
+        if optmenu == 1:
+            if not writing_to_chat():
+                print("Trouble in writting room")
+        elif optmenu == 2:
+            if not see_chat_room():
+                print("No messages")
+        elif optmenu == 3:
+            print("Hasta pronto")
+            client_on = False
+        #1001 - codigo especial para apagar el server desde el cliente por si se traba
+        elif optmenu == 1001:
+            if not quit_server():
+                print("Trouble quitting the server")
+    exit()
+
+if __name__ == "__main__":
+    try:
+        client_on()
+    except KeyboardInterrupt:
+        pass
