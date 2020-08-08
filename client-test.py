@@ -26,17 +26,19 @@ client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 client_socket.connect((IP,PORT))
 client_socket.setblocking(False)
 print(f"Connected to server in {IP}:{PORT}")
-#mandando mensaje de inicio al server
-my_username = input("Username: ")
-dprotocol = {
-    'type': 'signin',
-    'username': my_username
-}
-# serializing dprotocol
-msg = pickle.dumps(dprotocol)
-# adding header to msg
-msg = bytes(f"{len(msg):<{HEADER_LENGTH}}", "utf-8") + msg
-client_socket.send(msg)
+
+
+def signin(username):
+    dprotocol = {
+        'type': 'signin',
+        'username': my_username
+    }
+    # serializing dprotocol
+    msg = pickle.dumps(dprotocol)
+    # adding header to msg
+    msg = bytes(f"{len(msg):<{HEADER_LENGTH}}", "utf-8") + msg
+    return msg
+
 
 def receive_message(client_socket,header = ''):
     """ esta función recibe los mensajes del servidor"""
@@ -80,8 +82,61 @@ def sendmessage(msgtype, message, username):
     msg = pickle.dumps(dprotocol)
     # adding header to msg
     msg = bytes(f"{len(msg):<{HEADER_LENGTH}}", "utf-8") + msg
-    
     client_socket.send(msg)
+
+def updateMessage(hand,username,hasQueen,numTurn):
+    """ Esta funcion le manda al servidor el username del cliente,
+        la mano del cliente, si tiene la old maid y el numero de turno"""
+    dprotocol = {
+        "type":'updateMessage',
+        "hand": hand,
+        "username": username,
+        'hasQueen': hasQueen,
+        'numTurn': numTurn
+    }
+    # serializing dprotocol
+    msg = pickle.dumps(dprotocol)
+    # adding header to msg
+    msg = bytes(f"{len(msg):<{HEADER_LENGTH}}", "utf-8") + msg
+    client_socket.send(msg)
+
+def sendPair(pair,hand):
+    """ esta función le manda la pareja y la mano al server"""
+    dprotocol = {
+        "type":"sendpair",
+        'pair': pair,
+        'hand': hand
+    }
+    # serializing dprotocol
+    msg = pickle.dumps(dprotocol)
+    # adding header to msg
+    msg = bytes(f"{len(msg):<{HEADER_LENGTH}}", "utf-8") + msg
+    client_socket.send(msg)
+
+def pickCard(cardpos):
+    """ Esta funcion le manda la carta que escoge de la mano del contrincante"""
+    dprotocol = {
+        "type":"pickCard",
+        'cardpos': cardpos
+    }
+    # serializing dprotocol
+    msg = pickle.dumps(dprotocol)
+    # adding header to msg
+    msg = bytes(f"{len(msg):<{HEADER_LENGTH}}", "utf-8") + msg
+    client_socket.send(msg)
+
+def error(error):
+    """ Esta funcion le manda un error al server"""
+    dprotocol = {
+        'type':"error",
+        'error': error
+    }
+    # serializing dprotocol
+    msg = pickle.dumps(dprotocol)
+    # adding header to msg
+    msg = bytes(f"{len(msg):<{HEADER_LENGTH}}", "utf-8") + msg
+    client_socket.send(msg)
+
 
 def menu():
     """ Funcion que se encarga del menu del cliente """
@@ -176,6 +231,11 @@ def client_on():
             x.join()
             client_on = False
     exit()
+
+    #mandando mensaje de inicio al server
+    my_username = input("Username: ")
+    msg = signin(my_username)
+    client_socket.send(msg)
 
 if __name__ == "__main__":
     try:
