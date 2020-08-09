@@ -28,7 +28,7 @@ client_socket.setblocking(False)
 print(f"Connected to server in {IP}:{PORT}")
 
 
-def signin(username):
+def signin(my_username):
     dprotocol = {
         'type': 'signin',
         'username': my_username
@@ -146,7 +146,7 @@ def menu():
     print ("\t1 - mandar mensaje")
     print ("\t2 - salir")
 
-def writing_to_chat():
+def writing_to_chat(my_username):
     """ Funcion para mandar un mensaje a todos en el room <-? """
     try:
         message = input("¿cúal es el mensaje? ")
@@ -155,7 +155,7 @@ def writing_to_chat():
     except:
         return False
 
-def thread_function():
+def thread_function(my_username):
     while True:
         message = receive_message(client_socket)
         if message:
@@ -171,6 +171,10 @@ def client_on():
     global breakmech
     signedin = False
     client_on = True
+    #mandando mensaje de inicio al server
+    my_username = input("Username: ")
+    msg = signin(my_username)
+    client_socket.send(msg)
     while not signedin:
         try:
             while True:
@@ -204,7 +208,7 @@ def client_on():
         menu()
         # variable para contrlar el while
         flag = True
-        x = threading.Thread(target=thread_function, args=())
+        x = threading.Thread(target=thread_function, args=[my_username])
         x.start()
         while flag:
             # programación defensiva
@@ -222,7 +226,7 @@ def client_on():
         #determinamos que hacer en base a opcion del usuario
         if optmenu == 1:
             #mandar mensaje a todos los de un mismo grupo
-            if not writing_to_chat():
+            if not writing_to_chat(my_username):
                 print("Trouble in writting room")
         elif optmenu == 2:
             #salir del programa
@@ -232,10 +236,6 @@ def client_on():
             client_on = False
     exit()
 
-    #mandando mensaje de inicio al server
-    my_username = input("Username: ")
-    msg = signin(my_username)
-    client_socket.send(msg)
 
 if __name__ == "__main__":
     try:
