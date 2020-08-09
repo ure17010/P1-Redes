@@ -59,7 +59,7 @@ def room_created(client_socket, type_msg, roomid, players):
     msg = bytes(f"{len(msg):<{HEADER_LENGTH}}", "utf-8") + msg
     #print(msg)
     client_socket.send(msg)
-    print("msg sent")
+    
     return True
 
 def useraccepted(client_socket, username):
@@ -130,12 +130,15 @@ def rooms_management(cs, message, roomID):
                         print("Jugador ya esta en el grupo")
                         room_created(cs, 'already', roomID, [])
                         redflag = True
+                        break
                 #Si todavia no hay tres players agrego al jugador
                 if (len(rooms[rm]['players']) < 3 and redflag == False):
                     rooms[rm]['players'].append(usr)
                     print("has sido añadido al grupo numero: ", roomID)
                     print("otros jugadores en lobby: ", rooms[rm]['players'])
-                    room_created(cs, 'joined', roomID, rooms[rm]['players'])
+                    test = room_created(cs, 'joined', roomID, rooms[rm]['players'])
+                    if(test):
+                        print("msg sent")
         if room_is:
             lobby = create_room(usr, str(datetime.date.today()))
             rooms[roomID] = lobby

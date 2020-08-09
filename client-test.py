@@ -268,24 +268,44 @@ def client_on():
                 print("Trouble in room management")
 
             flag_room = True
-            while(flag_room):
-                message = receive_message(client_socket)
-                if message:
-                    print(message)
-                    flag_room = False
+            while not flag_room:
+                try:
+                    while True:
+                        #wait for useraccepted
+                        message = receive_message(client_socket)
+                        if message:
+                            print(message)
+                            if message['data']['type'] == 'created':
+                                print("\n¡nuevo room creado!\n")
+                                flag_room = False
+                                break
+                            elif message['data']['type'] == 'joined':
+                                print("has sido añadido al grupo numero: ", message['data']['roomID'])
+                                for pl in message['data']['players']:
+                                    if pl['username'] != my_username:
+                                        print("jugador en el mismo room que tu: ", pl['username'])
+                                flag_room = False
+                                break
+                            elif message['data']['type'] == 'already':
+                                print("\n¡usuario ya esta en el grupo!\n")
+                                flag_room = False
+                                break
+                            else:
+                                print("Disconnecting...")
+                                sys.exit()
 
-            if message['data']['type'] == 'created':
-                print("\n¡nuevo room creado!\n")
-                flag_room = False
-            elif message['data']['type'] == 'joined':
-                print("has sido añadido al grupo numero: ", message['data']['roomID'])
-                for pl in message['data']['players']:
-                    if pl['username'] != my_username:
-                        print("jugador en el mismo room que tu: ", pl['username'])
-                flag_room = False
-            elif message['data']['type'] == 'already':
-                print("\n¡usuario ya esta en el grupo!\n")
-                flag_room = False
+                except IOError as e:
+                    # errores de lectura
+                    if e.errno != errno.EAGAIN and e.errno != errno.EWOULDBLOCK:
+                        print('Reading error',str(e))
+                        sys.exit()
+                    continue
+
+                except Exception as e:
+                    print('General error', str(e))
+                    sys.exit()
+
+
 
         elif optmenu == 9:
             #salir del programa
