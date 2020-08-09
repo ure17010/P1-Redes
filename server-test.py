@@ -59,6 +59,7 @@ def room_created(client_socket, type_msg, roomid, players):
     msg = bytes(f"{len(msg):<{HEADER_LENGTH}}", "utf-8") + msg
     #print(msg)
     client_socket.send(msg)
+    print("msg sent")
     return True
 
 def useraccepted(client_socket, username):
@@ -105,7 +106,9 @@ def broadcast(username, message, roomID):
 
 def rooms_management(cs, message, roomID):
     """ logica de los rooms en el sistema """
+    redflag = False
     usr = []
+    room_is = True
     #Buscamos al cliente que mando el mensaje y asignamos el room id correcto
     for cl in clients:
         if clients[cl]['username'] == message['data']['username']:
@@ -120,18 +123,23 @@ def rooms_management(cs, message, roomID):
     else:
         for rm in rooms:
             #Si el room ya existe
-            print(rm)
-            if rm == roomID and (usr not in rooms[rm]['players']):
+            if rm == roomID:
+                room_is = False
+                for usr_ in rooms[rm]['players']:
+                    if usr == usr_:
+                        print("Jugador ya esta en el grupo")
+                        room_created(cs, 'already', roomID, [])
+                        redflag = True
                 #Si todavia no hay tres players agrego al jugador
-                if len(rooms[rm]['players']) < 3:
+                if (len(rooms[rm]['players']) < 3 and redflag == False):
                     rooms[rm]['players'].append(usr)
                     print("has sido añadido al grupo numero: ", roomID)
                     print("otros jugadores en lobby: ", rooms[rm]['players'])
                     room_created(cs, 'joined', roomID, rooms[rm]['players'])
-            else:
-                lobby = create_room(usr, str(datetime.date.today()))
-                rooms[roomID] = lobby
-                room_created(cs, 'created', roomID, [])
+        if room_is:
+            lobby = create_room(usr, str(datetime.date.today()))
+            rooms[roomID] = lobby
+            room_created(cs, 'created', roomID, [])
 
 if __name__ == "__main__":
     try:

@@ -269,23 +269,23 @@ def client_on():
 
             flag_room = True
             while(flag_room):
-                try:
-                    message = receive_message(client_socket)
-                    if message:
-                        if message['data']['type'] == 'created':
-                            print("\n¡nuevo room creado!\n")
-                            flag_room = False
-                        elif message['data']['type'] == 'joined':
-                            print("has sido añadido al grupo numero: ", message['data']['roomID'])
-                            for pl in message['data']['players']:
-                                if pl['username'] != my_username:
-                                    print("jugador en el mismo room que tu: ", pl['username'])
-                            flag_room = False
-                    else:
-                        continue
-                except Exception as e:
-                    print('General error', str(e))
-                    sys.exit()
+                message = receive_message(client_socket)
+                if message:
+                    print(message)
+                    flag_room = False
+
+            if message['data']['type'] == 'created':
+                print("\n¡nuevo room creado!\n")
+                flag_room = False
+            elif message['data']['type'] == 'joined':
+                print("has sido añadido al grupo numero: ", message['data']['roomID'])
+                for pl in message['data']['players']:
+                    if pl['username'] != my_username:
+                        print("jugador en el mismo room que tu: ", pl['username'])
+                flag_room = False
+            elif message['data']['type'] == 'already':
+                print("\n¡usuario ya esta en el grupo!\n")
+                flag_room = False
 
         elif optmenu == 9:
             #salir del programa
