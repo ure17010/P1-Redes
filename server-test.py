@@ -10,12 +10,16 @@ Estuardo Ureta - Oliver Mazariegos - Pablo Viana
 import socket
 import select
 import pickle
+import datetime
 
 #Variables globales
 HEADER_LENGTH = 10 
 IP = "127.0.0.1"
 PORT = 5555
+#Variable para manejar clientes en sistema
 clients = {}
+#Variable para manejar rooms en el sistema
+rooms = {}
 
 #Creamos los sockets para la conexión
 server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -42,7 +46,22 @@ def receive_message(client_socket):
     except:
         return False
 
-def useraccepted(username):
+def room_created(client_socket, type_msg, roomid, players):
+    """Función que avisa al cliente si se unio a un grupo o creo uno nuevo"""
+    dprotocol = {
+        'type': type_msg,
+        'roomID': roomid,
+        'players': players
+    }
+    
+    msg = pickle.dumps(dprotocol)
+    # adding header to msg
+    msg = bytes(f"{len(msg):<{HEADER_LENGTH}}", "utf-8") + msg
+    #print(msg)
+    client_socket.send(msg)
+    return True
+
+def useraccepted(client_socket, username):
     """Función que acepta una nueva conexión como cliente en el server"""
     dprotocol = {
         'type': 'useraccepted',
@@ -50,19 +69,23 @@ def useraccepted(username):
         'roomID': 1
     }
     
-    return dprotocol
-
-def send_message(client_socket,dprotocol):
-    """Esta función sirve para mandar mensajes a clientes en específivo"""
-    # serializing dprotocol
     msg = pickle.dumps(dprotocol)
-    print(msg)
     # adding header to msg
     msg = bytes(f"{len(msg):<{HEADER_LENGTH}}", "utf-8") + msg
     #print(msg)
     client_socket.send(msg)
+    return True
+
+def create_room(client, time):
+    """Esta función crea rooms dependiendo de los parametros"""
+    room = {
+        "players": [client],
+        "time_connection": [time]
+    }
+    print("\n¡nuevo room creado!")
+    return room
  
-def broadcast(username,message, roomID):
+def broadcast(username, message, roomID):
     """Esta función manda un mensaje a todos los que este en un mismo room ID"""
     dprotocol = {
         'type': 'message',
@@ -80,6 +103,35 @@ def broadcast(username,message, roomID):
         if clients[user]['username'] != username and clients[user]['roomID'] == roomID:
             user.send(msg)
 
+def rooms_management(cs, message, roomID):
+    """ logica de los rooms en el sistema """
+    usr = []
+    #Buscamos al cliente que mando el mensaje y asignamos el room id correcto
+    for cl in clients:
+        if clients[cl]['username'] == message['data']['username']:
+            usr = clients[cl]
+            clients[cl]['roomID'] = roomID
+
+    #Chequeamos si es el primer room que se crea
+    if not rooms:
+        lobby = create_room(usr, str(datetime.date.today()))
+        rooms[roomID] = lobby
+        room_created(cs, 'created', roomID, [])
+    else:
+        for rm in rooms:
+            #Si el room ya existe
+            print(rm)
+            if rm == roomID and (usr not in rooms[rm]['players']):
+                #Si todavia no hay tres players agrego al jugador
+                if len(rooms[rm]['players']) < 3:
+                    rooms[rm]['players'].append(usr)
+                    print("has sido añadido al grupo numero: ", roomID)
+                    print("otros jugadores en lobby: ", rooms[rm]['players'])
+                    room_created(cs, 'joined', roomID, rooms[rm]['players'])
+            else:
+                lobby = create_room(usr, str(datetime.date.today()))
+                rooms[roomID] = lobby
+                room_created(cs, 'created', roomID, [])
 
 if __name__ == "__main__":
     try:
@@ -97,8 +149,7 @@ if __name__ == "__main__":
                     if user is False:
                         continue
                     if user['data']['type'] == 'signin':
-                        userdata = useraccepted(user['data']['username'])
-                        send_message(client_socket, userdata)
+                        userdata = useraccepted(client_socket,user['data']['username'])
                         # Wait for singinok
                         signinok = False
                         while not signinok:
@@ -129,6 +180,8 @@ if __name__ == "__main__":
                         # si es para mandar un mensaje a todos los clientes
                         print(f"Received message from {user['username']}: {message['data']['message']}")
                         msg = broadcast(user['username'], message['data']['message'], user['roomID'])
+                    elif message['data']['type'] == 'roomid':
+                        room = rooms_management(client_socket, message, message['data']['roomid'])
                     else:
                         print("falta implementar")
 
