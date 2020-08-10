@@ -21,6 +21,8 @@ HEADER_LENGTH = 10
 IP = "127.0.0.1"
 PORT = 5555
 breakmech = False
+flag_room = False   
+
 
 # make conncection
 client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -28,6 +30,8 @@ client_socket.connect((IP,PORT))
 client_socket.setblocking(False)
 print(f"Connected to server in {IP}:{PORT}")
 
+def setFlagRoom(flag):
+    flag_room = flag
 
 def signin(my_username):
     dprotocol = {
@@ -53,7 +57,7 @@ def receive_message(client_socket,header = ''):
         
         message_length  = int(message_header.decode('utf-8').strip())
         data = pickle.loads(client_socket.recv(message_length))
-        msg = {"header": message_header, "data": data}
+        msg = {"header": message_header, "data": data}        
         return msg
     except:
         return False
@@ -218,23 +222,35 @@ def rooms_info(cs, my_username):
         return False
 
 def thread_function(my_username):
+    global flag_room
     while True:
         message = receive_message(client_socket)
         if message:
+            print(message)
             if message['data']['type'] == "message":
                 print(f"NUEVO MENSAJE de {message['data']['username']}", message['data']['message'])
-                menu()
-                print(f"{my_username} > ")
+                
+            elif (message['data']['type'] == 'already') | (message['data']['type'] == 'created') | (message['data']['type'] == 'joined'):
+                print('entro')
+                with lock:
+                    flag_room = True
+                    print(f'flag_room: {flag_room}')
+
+            menu()
+            print(f"{my_username} > ")
+                
         if breakmech:
             break
-    
+
+lock = threading.RLock()
+
 def client_on():
     """ logica del cliente """
     global breakmech
     global client_socket
     client_off = False
     signedin = False
-    flag_room = False
+    
     #mandando mensaje de inicio al server
     my_username = input("Username: ")
     msg = signin(my_username)
@@ -285,9 +301,13 @@ def client_on():
                     print("Trouble in room management")
 
                 while not flag_room:
-                    rc = room_check(client_socket)
-                    if rc == True:
-                        flag_room = True
+                    print(flag_room)
+                    # rc = receive_message(client_socket)
+                    time.sleep(1)
+                    # print(f'rc: {rc}')
+                    # if rc:
+                    #     flag_room = True
+                print('salio del flag_room')
 
             elif optmenu == 9:
                 #salir del programa
