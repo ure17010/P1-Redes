@@ -15,6 +15,7 @@ import errno
 import sys
 import pickle
 import threading
+import time
 # variables globales
 HEADER_LENGTH = 10 
 IP = "127.0.0.1"
@@ -53,7 +54,34 @@ def receive_message(client_socket,header = ''):
         message_length  = int(message_header.decode('utf-8').strip())
         data = pickle.loads(client_socket.recv(message_length))
         msg = {"header": message_header, "data": data}
-        return {"header": message_header, "data": data}
+        return msg
+    except:
+        return False
+
+def room_check(client_socket,header = ''):
+    """ esta función recibe los mensajes del servidor"""
+    try:
+        if header == '': 
+            message_header = client_socket.recv(HEADER_LENGTH)
+        else:
+            message_header = header
+        if not len(message_header):
+            return False
+        
+        message_length  = int(message_header.decode('utf-8').strip())
+        data = pickle.loads(client_socket.recv(message_length))
+        mes = {"header": message_header, "data": data}
+        print("la verdad: ", mes['data']['type'])
+        if mes['data']['type'] == 'created':
+            print("\n¡nuevo room creado!\n")
+        elif mes['data']['type'] == 'joined':
+            print("has sido añadido al grupo numero: ", mes['data']['roomID'])
+            for pl in mes['data']['players']:
+                if pl['username'] != my_username:
+                    print("jugador en el mismo room que tu: ", pl['username'])
+        elif mes['data']['type'] == 'already':
+            print("\n¡usuario ya esta en el grupo!\n")
+        return True
     except:
         return False
 
@@ -72,7 +100,7 @@ def signinok(username,roomID):
     msg = bytes(f"{len(msg):<{HEADER_LENGTH}}", "utf-8") + msg
     return msg
 
-def room_id(roomID, my_username):
+def room_id(client_socket, roomID, my_username):
     """ esta función avisa al servidor que numero de lobby indica un usuario"""
     dprotocol = {
         "type": "roomid",
@@ -169,7 +197,7 @@ def writing_to_chat(my_username):
     except:
         return False
 
-def rooms_info(my_username):
+def rooms_info(cs, my_username):
     """ Funcion para manejar o crear rooms """
     try:
         print("\n--------------------------------------------------------")
@@ -182,7 +210,7 @@ def rooms_info(my_username):
             message = input(f"{my_username} > " )
             try:
                 int(message)
-                room_id(int(message), my_username)
+                room_id(cs, int(message), my_username)
                 return True
             except:
                 print("solo numeros")
@@ -203,15 +231,18 @@ def thread_function(my_username):
 def client_on():
     """ logica del cliente """
     global breakmech
+    global client_socket
+    client_off = False
     signedin = False
-    client_on = True
+    flag_room = False
     #mandando mensaje de inicio al server
     my_username = input("Username: ")
     msg = signin(my_username)
     client_socket.send(msg)
-    while not signedin:
+    while not client_off:
         try:
-            while True:
+            #esperamos hasta que se complete condicion
+            while not signedin:
                 #wait for useraccepted
                 message = receive_message(client_socket)
                 if message:
@@ -221,103 +252,69 @@ def client_on():
                         msg = signinok(message['data']['username'], message['data']['roomID'])
                         client_socket.send(msg)
                         signedin = True
-                        break
                     else:
                         print(f"Server thought you were {message['data']['username']}")
                         print("Disconnecting...")
                         sys.exit()
+            menu()
+            flag = True
+            #Iniciamos thread encargado del chat
+            x = threading.Thread(target=thread_function, args=[my_username])
+            x.start()
+            while flag:
+                # programación defensiva
+                try:
+                    optmenu = int(input(f"{my_username} > "))
+                    if(optmenu > 10):
+                        print("Ingresa un numero del menu")
+                        menu()
+                    else:
+                        flag = False
+                except:
+                    print("ingrese una opcion valida")
+                    menu()
+
+            #determinamos que hacer en base a opcion del usuario
+            if optmenu == 1:
+                #mandar mensaje a todos los de un mismo grupo
+                if not writing_to_chat(my_username):
+                    print("Trouble in writting room")
+            elif optmenu == 2:
+                #Manejar creacion o asignacion de rooms
+                if not rooms_info(client_socket, my_username):
+                    print("Trouble in room management")
+
+                while not flag_room:
+                    rc = room_check(client_socket)
+                    if rc == True:
+                        flag_room = True
+
+            elif optmenu == 9:
+                #salir del programa
+                breakmech = True
+                print("hasta pronto")
+                x.join()
+                client_off = True
 
         except IOError as e:
             # errores de lectura
             if e.errno != errno.EAGAIN and e.errno != errno.EWOULDBLOCK:
                 print('Reading error',str(e))
-                sys.exit()
+                exit()
             continue
 
         except Exception as e:
             print('General error', str(e))
-            sys.exit()
+            exit()
 
-    while client_on:
-        menu()
-        # variable para contrlar el while
-        flag = True
-        x = threading.Thread(target=thread_function, args=[my_username])
-        x.start()
-        while flag:
-            # programación defensiva
-            try:
-                optmenu = int(input(f"{my_username} > "))
-                if(optmenu > 10):
-                    print("Ingresa un numero del menu")
-                    menu()
-                else:
-                    flag = False
-            except:
-                print("ingrese una opcion valida")
-                menu()
-
-        #determinamos que hacer en base a opcion del usuario
-        if optmenu == 1:
-            #mandar mensaje a todos los de un mismo grupo
-            if not writing_to_chat(my_username):
-                print("Trouble in writting room")
-        elif optmenu == 2:
-            #Manejar creacion o asignacion de rooms
-            if not rooms_info(my_username):
-                print("Trouble in room management")
-
-            flag_room = True
-            while not flag_room:
-                try:
-                    while True:
-                        #wait for useraccepted
-                        message = receive_message(client_socket)
-                        if message:
-                            print(message)
-                            if message['data']['type'] == 'created':
-                                print("\n¡nuevo room creado!\n")
-                                flag_room = False
-                                break
-                            elif message['data']['type'] == 'joined':
-                                print("has sido añadido al grupo numero: ", message['data']['roomID'])
-                                for pl in message['data']['players']:
-                                    if pl['username'] != my_username:
-                                        print("jugador en el mismo room que tu: ", pl['username'])
-                                flag_room = False
-                                break
-                            elif message['data']['type'] == 'already':
-                                print("\n¡usuario ya esta en el grupo!\n")
-                                flag_room = False
-                                break
-                            else:
-                                print("Disconnecting...")
-                                sys.exit()
-
-                except IOError as e:
-                    # errores de lectura
-                    if e.errno != errno.EAGAIN and e.errno != errno.EWOULDBLOCK:
-                        print('Reading error',str(e))
-                        sys.exit()
-                    continue
-
-                except Exception as e:
-                    print('General error', str(e))
-                    sys.exit()
-
-
-
-        elif optmenu == 9:
-            #salir del programa
-            breakmech = True
+        except KeyboardInterrupt:
             print("hasta pronto")
-            x.join()
-            client_on = False
-    exit()
-
+            breakmech = True
+            exit()
 
 if __name__ == "__main__":
     try:
         client_on()
     except KeyboardInterrupt:
-        pass
+        print("hasta pronto")
+        exit()

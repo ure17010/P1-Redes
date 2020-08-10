@@ -111,16 +111,25 @@ def rooms_management(cs, message, roomID):
     room_is = True
     #Buscamos al cliente que mando el mensaje y asignamos el room id correcto
     for cl in clients:
+        #si los username son los mismos lo asigno a variable usr y cambio su roomID al correcto en sistema
         if clients[cl]['username'] == message['data']['username']:
             usr = clients[cl]
             clients[cl]['roomID'] = roomID
 
-    #Chequeamos si es el primer room que se crea
+    #Chequeamos si rooms esta vacio
     if not rooms:
+        print("creando primer room de todos")
+        #creamos la sala
         lobby = create_room(usr, str(datetime.date.today()))
+        #la agregamos a la variable de control
         rooms[roomID] = lobby
-        room_created(cs, 'created', roomID, [])
+        #enviamos mensaje a cliente que se creo un room
+        rc = room_created(cs, 'created', roomID, [])
+        #verificamos envio exitoso de mensaje
+        if rc == True:
+            print("mensaje enviado con exito")
     else:
+    #si rooms no esta vacio
         for rm in rooms:
             #Si el room ya existe
             if rm == roomID:
@@ -128,7 +137,9 @@ def rooms_management(cs, message, roomID):
                 for usr_ in rooms[rm]['players']:
                     if usr == usr_:
                         print("Jugador ya esta en el grupo")
-                        room_created(cs, 'already', roomID, [])
+                        rc = room_created(cs, 'already', roomID, [])
+                        if rc == True:
+                            print("envio exitoso")
                         redflag = True
                         break
                 #Si todavia no hay tres players agrego al jugador
@@ -138,17 +149,18 @@ def rooms_management(cs, message, roomID):
                     print("otros jugadores en lobby: ", rooms[rm]['players'])
                     test = room_created(cs, 'joined', roomID, rooms[rm]['players'])
                     if(test):
-                        print("msg sent")
+                        print("envio exitoso")
         if room_is:
+            print("creando room porque no habia numero con ese")
             lobby = create_room(usr, str(datetime.date.today()))
             rooms[roomID] = lobby
             room_created(cs, 'created', roomID, [])
 
-if __name__ == "__main__":
-    try:
-        #variable para controlar el while
-        bandera = True
-        while bandera:
+def server_on():
+    off = False
+    #variable para controlar el while
+    while not off:
+        try:
             read_sockets, _, exception_sockets = select.select(sockets_list, [], sockets_list)
 
             for notified_socket in read_sockets:
@@ -177,6 +189,7 @@ if __name__ == "__main__":
                 else:
                     # recibimos mensaje del server
                     message = receive_message(notified_socket)
+                    print(message)
 
                     if message is False:
                         #Se cierra la conexión
@@ -186,20 +199,29 @@ if __name__ == "__main__":
                         continue
                     #Identificamos al usuario del cual proviene el socket
                     user = clients[notified_socket]
-                    
+                        
                     if message['data']['type'] == 'broadcast':
                         # si es para mandar un mensaje a todos los clientes
                         print(f"Received message from {user['username']}: {message['data']['message']}")
                         msg = broadcast(user['username'], message['data']['message'], user['roomID'])
                     elif message['data']['type'] == 'roomid':
-                        room = rooms_management(client_socket, message, message['data']['roomid'])
+                        room = rooms_management(notified_socket, message, message['data']['roomid'])
                     else:
                         print("falta implementar")
 
                 for notified_socket in exception_sockets:
                     sockets_list.remove(notified_socket)
                     del clients[notified_socket]
-        exit()
+        except KeyboardInterrupt:
+            print("hasta pronto")
+            off = True
+            exit()
+    return False
+
+
+if __name__ == "__main__":
+    try:
+        server_on()
     except KeyboardInterrupt:
         print("hasta pronto")
         exit()
