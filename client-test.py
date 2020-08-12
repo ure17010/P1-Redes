@@ -231,13 +231,17 @@ def thread_function(my_username):
                 print(f"NUEVO MENSAJE de {message['data']['username']}", message['data']['message'])
                 
             elif (message['data']['type'] == 'already') | (message['data']['type'] == 'created') | (message['data']['type'] == 'joined'):
-                print('entro')
-                with lock:
-                    flag_room = True
-                    print(f'flag_room: {flag_room}')
+                if message['data']['type'] == 'created':
+                    print("\n¡nuevo room creado!\n")
+                elif message['data']['type'] == 'joined':
+                    print("\nhas sido añadido al grupo numero: ", message['data']['roomID'])
+                    for pl in message['data']['players']:
+                        if pl['username'] != my_username:
+                            print("jugador en el mismo room que tu: \n", pl['username'])
+                elif message['data']['type'] == 'already':
+                    print("\n¡usuario ya esta en el grupo!\n")
 
-            menu()
-            print(f"{my_username} > ")
+                flag_room = True
                 
         if breakmech:
             break
@@ -307,7 +311,8 @@ def client_on():
                     # print(f'rc: {rc}')
                     # if rc:
                     #     flag_room = True
-                print('salio del flag_room')
+                
+                #game_function()
 
             elif optmenu == 9:
                 #salir del programa
