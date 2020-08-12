@@ -21,7 +21,8 @@ HEADER_LENGTH = 10
 IP = "127.0.0.1"
 PORT = 5555
 breakmech = False
-flag_room = False   
+flag_room = False
+not_enough_players = True
 
 
 # make conncection
@@ -223,6 +224,7 @@ def rooms_info(cs, my_username):
 
 def thread_function(my_username):
     global flag_room
+    global not_enough_players
     while True:
         message = receive_message(client_socket)
         if message:
@@ -241,12 +243,20 @@ def thread_function(my_username):
                 elif message['data']['type'] == 'already':
                     print("\n¡usuario ya esta en el grupo!\n")
 
-                flag_room = True
+                with lock:
+                    flag_room = True
+            elif (message['data']['type'] == 'you_can_play_now'):
+                print(message)
+                with game_lock:
+                    not_enough_players = False
+
                 
         if breakmech:
             break
 
 lock = threading.RLock()
+#un lock para cada variable ¿? no sé 
+game_lock = threading.RLock()
 
 def client_on():
     """ logica del cliente """
@@ -305,13 +315,17 @@ def client_on():
                     print("Trouble in room management")
 
                 while not flag_room:
-                    print(flag_room)
                     # rc = receive_message(client_socket)
-                    time.sleep(1)
+                    continue
                     # print(f'rc: {rc}')
                     # if rc:
                     #     flag_room = True
-                
+                print(" \n----- ¡ PRONTO ESTAREAMOS JUGANDO ! -----")
+                print(" ----- esperando a los demás jugadores -----\n")
+                while not_enough_players:
+                    print(" ¡espera! pronto se conectaran tus amigos")
+                    time.sleep(5)
+                print("EMPIEZA OLD MAID PUES PAPA")
                 #game_function()
 
             elif optmenu == 9:

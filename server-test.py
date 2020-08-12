@@ -11,6 +11,7 @@ import socket
 import select
 import pickle
 import datetime
+import random
 
 #Variables globales
 HEADER_LENGTH = 10 
@@ -151,10 +152,31 @@ def rooms_management(cs, message, roomID):
                     if(test):
                         print("envio exitoso")
         if room_is:
-            print("creando room porque no habia numero con ese")
+            print("creando room porque no habia numero con este id")
             lobby = create_room(usr, str(datetime.date.today()))
             rooms[roomID] = lobby
             room_created(cs, 'created', roomID, [])
+
+def room_ready_play(players):
+    """ Funcion que maneja el caso de uso cuando un lobby de juego tiene la cantidad esperada de jugadores: 3 """
+    turnos = [1 , 2, 3]
+    random.shuffle(turnos)
+    for pl in players:
+        dprotocol = {
+            'type': 'you_can_play_now',
+            'turn': turnos.pop(),
+        }
+        # serializing dprotocol
+        msg = pickle.dumps(dprotocol)
+        #print(msg)
+        # adding header to msg
+        msg = bytes(f"{len(msg):<{HEADER_LENGTH}}", "utf-8") + msg
+        #mandar mensaje a todos los clientes del room
+        for cl in clients:
+            if clients[cl]['username'] == pl['username']:
+                cl.send(msg)
+
+
 
 def server_on():
     off = False
@@ -208,6 +230,14 @@ def server_on():
                         room = rooms_management(notified_socket, message, message['data']['roomid'])
                     else:
                         print("falta implementar")
+
+                #Entre todos los lobbys de juego en el sistema
+                for rm in rooms:
+                    #verificar si alguno tiene tres jugadores
+                    print(len(rooms[rm]['players']))
+                    if len(rooms[rm]['players']) == 3:
+                        #Indicar que estan listos para jugar
+                        room_ready_play(rooms[rm]['players'])
 
                 for notified_socket in exception_sockets:
                     sockets_list.remove(notified_socket)
