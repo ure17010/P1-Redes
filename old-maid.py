@@ -41,6 +41,58 @@ class OldMaid(object):
                         if player == 2: player = 0
                         else: player += 1
 
-        def isOver(self):
+        def nextTurn(self):
+                if self.playerTurn == 2:
+                        self.playerTurn = 0
+                else: self.playerTurn += 1
 
-                
+        # Funcion que detecta quienes son los ganadores
+        def winners(self):
+                ganadores = []
+                for player in self.players:
+                        if not player['hand']: ganadores.append(player['name'])
+                return ganadores
+
+        # Fucnion que checkea si ya termino el juego, si si devuelve los ganadores
+        def isOver(self):
+                if len(self.board) == 24: return self.winners()
+                else: False
+
+        # Función que chequea si jugador tiene parejas y la devuelve
+        def hasPair(self, playerIndex):
+                hand = self.players[playerIndex]['hand']
+                for i in range(len(hand)):
+                        current = hand[i]
+                        for j in range(i+1,len(hand)):
+                                possible = hand[j]
+                                # Chequea si hay pareja
+                                if current[0] == possible[0]:
+                                        # Se le quita la pareja al jugador
+                                        pareja = (self.players[playerIndex]['hand'].pop(j), self.players[player]['hand'].pop(i))
+                                        # Se agrega la pareja al board
+                                        self.board.append(pareja)
+                                        return pareja
+                return False
+
+        # Función que lista los posibles movimientos
+        def listMoves(self):
+                if self.playerTurn == 0:
+                        oponent = 2
+                else:
+                        oponent = self.playerTurn - 1
+                return list(range(len(self.players[oponent]['hand'])))
+
+        # Función que hace un movimiento. Recibe el index de la carta que quiere robar el jugador 
+        def move(self, cardPicked):
+                if self.playerTurn == 0:
+                        oponent = 2
+                else:
+                        oponent = self.playerTurn - 1
+                # Se le quita carta al jugador a la derecha, y se le agrega a la mano del jugador actual
+                self.players[self.playerTurn]['hand'].append(self.player[oponent]['hand'].pop(cardPicked))
+                # Se detecta si hay una pareja
+                pareja = self.hasPair(self.playerTurn)
+                # Se actualiza el turno del jugador
+                self.nextTurn()
+                # Se devuelve la pareja que se encontró
+                return pareja
