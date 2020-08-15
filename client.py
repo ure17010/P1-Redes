@@ -16,8 +16,6 @@ import sys
 import pickle
 import threading
 import time
-
-#Importamos la clase de OldMaid()
 # variables globales
 HEADER_LENGTH = 10 
 IP = "127.0.0.1"
