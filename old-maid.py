@@ -21,7 +21,7 @@ class OldMaid(object):
                 # Aca estaran todas las parejas que bajen los jugadores
                 # las parejas las bajaremos en forma de tupla
                 self.board = []
-                shuffle()
+                self.shuffle()
 
         # Funcion que genera un deck, lo revuelve y reparte cartas a cada jugador
         def shuffle(self):
@@ -45,12 +45,13 @@ class OldMaid(object):
                 if self.playerTurn == 2:
                         self.playerTurn = 0
                 else: self.playerTurn += 1
+                self.turn += 1
 
         # Funcion que detecta quienes son los ganadores
         def winners(self):
                 ganadores = []
                 for player in self.players:
-                        if not player['hand']: ganadores.append(player['name'])
+                        if not player['hand']: ganadores.append(player['username'])
                 return ganadores
 
         # Fucnion que checkea si ya termino el juego, si si devuelve los ganadores
