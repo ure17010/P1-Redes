@@ -63,33 +63,6 @@ def receive_message(client_socket,header = ''):
     except:
         return False
 
-def room_check(client_socket,header = ''):
-    """ esta función recibe los mensajes del servidor"""
-    try:
-        if header == '': 
-            message_header = client_socket.recv(HEADER_LENGTH)
-        else:
-            message_header = header
-        if not len(message_header):
-            return False
-        
-        message_length  = int(message_header.decode('utf-8').strip())
-        data = pickle.loads(client_socket.recv(message_length))
-        mes = {"header": message_header, "data": data}
-        print("la verdad: ", mes['data']['type'])
-        if mes['data']['type'] == 'created':
-            print("\n¡nuevo room creado!\n")
-        elif mes['data']['type'] == 'joined':
-            print("has sido añadido al grupo numero: ", mes['data']['roomID'])
-            for pl in mes['data']['players']:
-                if pl['username'] != my_username:
-                    print("jugador en el mismo room que tu: ", pl['username'])
-        elif mes['data']['type'] == 'already':
-            print("\n¡usuario ya esta en el grupo!\n")
-        return True
-    except:
-        return False
-
 def signinok(username,roomID):
     """ esta función avisa al servidor que el sing in fue un exito"""
     dprotocol = {
@@ -228,25 +201,21 @@ def thread_function(my_username):
     while True:
         message = receive_message(client_socket)
         if message:
-            print(message)
             if message['data']['type'] == "message":
                 print(f"NUEVO MENSAJE de {message['data']['username']}", message['data']['message'])
-                
-            elif (message['data']['type'] == 'already') | (message['data']['type'] == 'created') | (message['data']['type'] == 'joined'):
-                if message['data']['type'] == 'created':
+            elif (message['data']['type'] == 'room'):
+                if message['data']['type2'] == 'created':
                     print("\n¡nuevo room creado!\n")
-                elif message['data']['type'] == 'joined':
+                elif message['data']['type2'] == 'joined':
                     print("\nhas sido añadido al grupo numero: ", message['data']['roomID'])
                     for pl in message['data']['players']:
                         if pl['username'] != my_username:
                             print("jugador en el mismo room que tu: \n", pl['username'])
-                elif message['data']['type'] == 'already':
+                elif message['data']['type2'] == 'already':
                     print("\n¡usuario ya esta en el grupo!\n")
-
                 with lock:
                     flag_room = True
             elif (message['data']['type'] == 'you_can_play_now'):
-                print(message)
                 with game_lock:
                     not_enough_players = False
 
@@ -264,6 +233,7 @@ def client_on():
     global client_socket
     client_off = False
     signedin = False
+    game_on = True
     
     #mandando mensaje de inicio al server
     my_username = input("Username: ")
@@ -325,7 +295,9 @@ def client_on():
                 while not_enough_players:
                     print(" ¡espera! pronto se conectaran tus amigos")
                     time.sleep(5)
-                print("EMPIEZA OLD MAID PUES PAPA")
+                while game_on:
+                    print("EMPIEZA OLD MAID PUES PAPA")
+                    time.sleep(10)
                 #game_function()
 
             elif optmenu == 9:

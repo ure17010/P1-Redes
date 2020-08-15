@@ -50,7 +50,8 @@ def receive_message(client_socket):
 def room_created(client_socket, type_msg, roomid, players):
     """Función que avisa al cliente si se unio a un grupo o creo uno nuevo"""
     dprotocol = {
-        'type': type_msg,
+        'type': 'room',
+        'type2': type_msg,
         'roomID': roomid,
         'players': players
     }
