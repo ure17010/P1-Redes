@@ -26,13 +26,16 @@ class OldMaid(object):
         # Funcion que genera un deck, lo revuelve y reparte cartas a cada jugador
         def shuffle(self):
                 # crea deck
-                deck = list(itertools.product(range(1,14),['Spade','Heart','Diamond','Club']))
+                deck = list(itertools.product(range(1,7),['Spade','Heart','Diamond','Club']))
                 # revuelve deck
                 random.shuffle(deck)
                 # quita las Qs: 12
+                """
+                comentado pal testing
                 deck.remove((12,'Heart'))
                 deck.remove((12,'Club'))
                 deck.remove((12,'Diamond'))
+                """
                 player = 0
                 # Repartición de cartas
                 for card in deck:
@@ -111,23 +114,29 @@ class OldMaid(object):
 
         # Función que hace un movimiento. Recibe el index de la carta que quiere robar el jugador 
         def move(self, cardPicked):
+                oponent = self.oponent()
+                # Se le quita carta al jugador a la derecha, y se le agrega a la mano del jugador actual
+                self.players[self.playerTurn]['hand'].append(self.player[oponent]['hand'].pop(cardPicked))
+                # Se actualiza el turno del jugador
+                self.nextTurn()
+                # Se devuelve la pareja que se encontró
+                return True
+
+        #Esta funcion calcula quien es el oponente del jugar con el turno actual
+        def oponent(self):
                 if self.playerTurn == 0:
                         oponent = 2
                 else:
                         oponent = self.playerTurn - 1
-                # Se le quita carta al jugador a la derecha, y se le agrega a la mano del jugador actual
-                self.players[self.playerTurn]['hand'].append(self.player[oponent]['hand'].pop(cardPicked))
-                # Se detecta si hay una pareja
-                pareja = self.hasPair(self.playerTurn)
-                # Se actualiza el turno del jugador
-                self.nextTurn()
-                # Se devuelve la pareja que se encontró
-                return pareja
+
+                return oponent
 
         def getStatus(self):
                 return {
                         'turn': self.turn,
                         'board': self.board,
                         'players': self.players,
-                        'index_of_player_in_turn': self.playerTurn
+                        'player_in_turn':self.players[self.playerTurn],
+                        'index_of_player_in_turn': self.playerTurn,
+                        'oponent': self.players[self.oponent()]
                 }

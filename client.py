@@ -16,6 +16,7 @@ import sys
 import pickle
 import threading
 import time
+import itertools
 #Importamos clase OldMaid()
 import oldmaid as om
 # variables globales
@@ -24,8 +25,13 @@ IP = "127.0.0.1"
 PORT = 5555
 breakmech = False
 flag_room = False
+pairs_not_down = True
 not_enough_players = True
+not_my_turn = True
 players_in_ma_room = []
+lock = threading.RLock()
+#un lock para cada variable ¿? no sé 
+game_lock = threading.RLock()
 
 
 # make conncection
@@ -202,6 +208,8 @@ def rooms_info(cs, my_username):
 def thread_function(my_username):
     global flag_room
     global not_enough_players
+    global pairs_not_down
+    global not_my_turn
     while True:
         message = receive_message(client_socket)
         if message:
@@ -225,19 +233,50 @@ def thread_function(my_username):
                     players_in_ma_room.append(pl)
                 with game_lock:
                     not_enough_players = False
-
-                
+            elif (message['data']['type'] == 'all_pairs_down'):
+                pairs_not_down = False
+            elif (message['data']['type'] == 'your_turn'):
+                not_my_turn = False
         if breakmech:
             break
 
-lock = threading.RLock()
-#un lock para cada variable ¿? no sé 
-game_lock = threading.RLock()
+def pairs_down(game_oldmaid, playerIndex, my_username):
+    """Esta funcion es la encargada de la jugabilidad de bajar las parejas de cartas"""
+    #no hay progra defensiva todavia
+    while game_oldmaid.hasPair(playerIndex):
+        status = game_oldmaid.getStatus()
+        for pl in status['players']:
+            print("recibido ", pl['username'])
+            print("el mio ",my_username)
+            if pl["username"] == my_username:
+                print("\n------> MI MANO: ", pl['hand'])
+
+        key = input("¿qué pareja bajas a la mesa? ")
+        response = game_oldmaid.isPair(playerIndex, int(key))
+        if response == True:
+            print("\nPareja bajada!\n")
+        else:
+            print("\nNo existe una pareja con ese numero\n")
+
+                        
+    print("\n    _____  ")
+    print("  _|  __ \ ")
+    print(" (_) |  | |")
+    print("   | |  | | ¡Parece que ya no hay más parejas!")
+    print("   | |  | |")
+    print("  _| |__| |")
+    print(" (_)_____/ \n")
+
+    sendmessage('im_done','im done',my_username)
+
+    return True
 
 def client_on():
     """ logica del cliente """
     global breakmech
     global client_socket
+    global pairs_not_down
+    global not_my_turn
     client_off = False
     signedin = False
     game_on = True
@@ -304,48 +343,58 @@ def client_on():
                     time.sleep(5)
 
                 # ------------------------------ AQUI EMPIEZA OLD MAID ------------------------------
+                game_oldmaid = om.OldMaid(players_in_ma_room)
+                decition_flag = True
+                print("\n\n    ______    ___       ________       ___      ___       __        __     ________   ")
+                print("   /      \  |   |     |        \     |   \    /   |     /  \      |  \   |        \  ")
+                print("  // ____  \ ||  |     (.  ___  :)     \   \  //   |    /    \     ||  |  (.  ___  :) ")
+                print(" /  /    ) :)|:  |     |: \   ) ||     /\\  \/.    |   /' /\  \    |:  |  |: \   ) || ")
+                print("(: (____/ //  \  |___  (| (___\ ||    |: \.        |  //  __'  \   |.  |  (| (___\ || ")
+                print(" \        /  ( \_|:  \ |:       :)    |.  \    /:  | /   /  \\  \  /\  |\ |:       :) ")
+                print("  \"_____/    \_______)(________/     |___|\__/|___|(___/    \___)(__\_|_)(________/  \n\n")
                 while game_on:
-                    game_oldmaid = om.OldMaid(players_in_ma_room)
                     status = game_oldmaid.getStatus()
-                    print("\n\n    ______    ___       ________       ___      ___       __        __     ________   ")
-                    print("   /      \  |   |     |        \     |   \    /   |     /  \      |  \   |        \  ")
-                    print("  // ____  \ ||  |     (.  ___  :)     \   \  //   |    /    \     ||  |  (.  ___  :) ")
-                    print(" /  /    ) :)|:  |     |: \   ) ||     /\\  \/.    |   /' /\  \    |:  |  |: \   ) || ")
-                    print("(: (____/ //  \  |___  (| (___\ ||    |: \.        |  //  __'  \   |.  |  (| (___\ || ")
-                    print(" \        /  ( \_|:  \ |:       :)    |.  \    /:  | /   /  \\  \  /\  |\ |:       :) ")
-                    print("  \"_____/    \_______)(________/     |___|\__/|___|(___/    \___)(__\_|_)(________/  \n\n")
                     #primer turno
                     if(status['turn'] == 1):
                         print("\n\nEs el primer turno, por lo que debes armar parejas con las cartas de tu mano")
                         print("Para hacerlo, solo debes escribir el número de la carta que tiene una pareja")
                         print("Por ejemplo, si yo tuviera en mi mano [...(2, 'Diamond'), (2, 'Heart')...]")
                         print("Solo debo escribir: 2 para armar la pareja\n\n")
-
                         cont = 0
                         for pl in status['players']:
                             if pl["username"] == my_username:
-                                playerTurn = pl['turn']
                                 playerIndex = cont
-                                print("------> MI MANO: ", pl['hand'])
                             cont += 1
 
+                        pairs_down(game_oldmaid, playerIndex, my_username)
+                        print("esperando a que todos bajen sus cartas")
+                        while pairs_not_down:
+                            continue
+                        game_oldmaid.nextTurn()
 
-                        #no hay progra defensiva todavia
-                        while game_oldmaid.hasPair(playerIndex):
-                            key = input("¿qué pareja bajas a la mesa? ")
-                            response = game_oldmaid.isPair(playerIndex, int(key))
-                            if response == True:
-                                print("\nPareja bajada!\n")
+                    status = game_oldmaid.getStatus()
+                    if(playerIndex == status['index_of_player_in_turn']):
+                        print("\n-----! ES TU TURNO !-----")
+                        status2 = game_oldmaid.getStatus()
+                        print(f"debes quitar una carta de la mano de {status2['oponent']['username']}")
+                        print(f"{status2['oponent']['username']} tiene {len(status2['oponent']['hand'])} cartas")
+                        visualization = list(itertools.product(range(1,len(status2['oponent']['hand'])),['carta desconocida']))                        
+                        print("\n\n", visualization)
+                        decition = input("¿que carta deseas quitar al oponente? (? empieza en 0) ")
+                        while decition_flag:
+                            if int(decition) > len(status['oponent']['hand']):
+                                print("\n¡tu oponente no tiene tantas cartas!")
+                                decition = input("¿que carta deseas quitar al oponente? (? empieza en 0) ")
                             else:
-                                print("\nNo existe una pareja con ese numero\n")
+                                decition_flag = False
+                        game_oldmaid.move(decition)
+                        pairs_down(game_oldmaid, playerIndex, my_username)
+                        not_my_turn = True
+                    else:
+                        print(f"!---- AHORA ES EL TURNO DE {status['player_in_turn']['username']}")
 
-                            status = game_oldmaid.getStatus()
-                            for pl in status['players']:
-                                if pl["username"] == my_username:
-                                    print("\n------> MI MANO: ", pl['hand'])
-                        print("Ya no hay mas parejas")
-                        time.sleep(10000)
-                                                                                      
+                    while not_my_turn:
+                        continue
 
                 #game_function()
                 # ------------------------------ AQUI TERMINA OLD MAID ------------------------------

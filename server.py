@@ -178,8 +178,25 @@ def room_ready_play(players):
             if clients[cl]['username'] == pl['username']:
                 cl.send(msg)
 
+    return True
+
+def all_done(client_socket):
+    """Función para avisar que todos bajaron sus cartas"""
+    dprotocol = {
+        'type': 'all_pairs_down',
+    }
+    
+    msg = pickle.dumps(dprotocol)
+    # adding header to msg
+    msg = bytes(f"{len(msg):<{HEADER_LENGTH}}", "utf-8") + msg
+    #print(msg)
+    for cl in clients:
+        cl.send(msg)
+    return True
+
 def server_on():
     off = False
+    cont = 0
     #variable para controlar el while
     while not off:
         try:
@@ -225,16 +242,20 @@ def server_on():
                     if message['data']['type'] == 'broadcast':
                         # si es para mandar un mensaje a todos los clientes
                         print(f"Received message from {user['username']}: {message['data']['message']}")
-                        msg = broadcast(user['username'], message['data']['message'], user['roomID'])
+                        broadcast(user['username'], message['data']['message'], user['roomID'])
                     elif message['data']['type'] == 'roomid':
-                        room = rooms_management(notified_socket, message, message['data']['roomid'])
+                        rooms_management(notified_socket, message, message['data']['roomid'])
+                    elif message['data']['type'] == 'im_done':
+                        cont += 1
+                        if cont == 3:
+                            all_done(notified_socket)
+                            cont = 0
                     else:
                         print("falta implementar")
 
                 #Entre todos los lobbys de juego en el sistema
                 for rm in rooms:
                     #verificar si alguno tiene tres jugadores
-                    print(len(rooms[rm]['players']))
                     if len(rooms[rm]['players']) == 3:
                         #Indicar que estan listos para jugar
                         room_ready_play(rooms[rm]['players'])
