@@ -116,7 +116,7 @@ class OldMaid(object):
         def move(self, cardPicked):
                 oponent = self.oponent()
                 # Se le quita carta al jugador a la derecha, y se le agrega a la mano del jugador actual
-                self.players[self.playerTurn]['hand'].append(self.player[oponent]['hand'].pop(cardPicked))
+                self.players[self.playerTurn]['hand'].append(self.players[oponent]['hand'].pop(cardPicked))
                 # Se actualiza el turno del jugador
                 self.nextTurn()
                 # Se devuelve la pareja que se encontró
