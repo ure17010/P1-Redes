@@ -26,7 +26,7 @@ class OldMaid(object):
         # Funcion que genera un deck, lo revuelve y reparte cartas a cada jugador
         def shuffle(self):
                 # crea deck
-                deck = list(itertools.product(range(1,7),['Spade','Heart','Diamond','Club']))
+                deck = list(itertools.product(range(1,7),['\u2660', '\u2661', '\u2662', '\u2663']))
                 # revuelve deck
                 random.shuffle(deck)
                 # quita las Qs: 12
