@@ -62,18 +62,44 @@ class OldMaid(object):
         # Función que chequea si jugador tiene parejas y la devuelve
         def hasPair(self, playerIndex):
                 hand = self.players[playerIndex]['hand']
+                cont = 0
                 for i in range(len(hand)):
                         current = hand[i]
-                        for j in range(len(hand)):
+                        for j in range(i+1,len(hand)):
                                 possible = hand[j]
                                 # Chequea si hay pareja
                                 if current[0] == possible[0]:
-                                        # Se le quita la pareja al jugador
-                                        pareja = (self.players[playerIndex]['hand'].pop(j), self.players[player]['hand'].pop(i))
-                                        # Se agrega la pareja al board
-                                        self.board.append(pareja)
-                                        return pareja
-                return False
+                                        cont += 1
+                if cont > 0:
+                        return True
+                else:
+                        return False
+
+        # Función que chequea si jugador tiene parejas con una carta en específico y la quita de su mano si es pareja
+        def isPair(self, playerIndex, key):
+                hand = self.players[playerIndex]['hand']
+                cont = 0
+                for i in range(len(hand)):
+                        current = hand[i][0]
+                        if current == key:
+                                cont +=1
+                        if cont == 2:
+                                break
+                cards = []
+                if cont == 2:
+                        for i in range(len(hand)):
+                                current = hand[i][0]
+                                if current == key:
+                                        cards.append(i)
+                                        cont -=1
+                                if cont == 0:
+                                        uno = self.players[playerIndex]['hand'].pop(cards[1])
+                                        dos = self.players[playerIndex]['hand'].pop(cards[0])
+                                        self.board.append((uno,dos))
+                                        break
+                        return True
+                else:
+                        return False
 
         # Función que lista los posibles movimientos
         def listMoves(self):
@@ -102,6 +128,6 @@ class OldMaid(object):
                 return {
                         'turn': self.turn,
                         'board': self.board,
-                        'players': self.players
+                        'players': self.players,
                         'index_of_player_in_turn': self.playerTurn
                 }

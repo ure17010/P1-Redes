@@ -321,18 +321,29 @@ def client_on():
                         print("Por ejemplo, si yo tuviera en mi mano [...(2, 'Diamond'), (2, 'Heart')...]")
                         print("Solo debo escribir: 2 para armar la pareja\n\n")
 
+                        cont = 0
                         for pl in status['players']:
                             if pl["username"] == my_username:
+                                playerTurn = pl['turn']
+                                playerIndex = cont
                                 print("------> MI MANO: ", pl['hand'])
+                            cont += 1
+
 
                         #no hay progra defensiva todavia
-                        pairs_down = True
-                        while pairs_down:
-                            print(status['players']['turn'])
+                        while game_oldmaid.hasPair(playerIndex):
                             key = input("¿qué pareja bajas a la mesa? ")
+                            response = game_oldmaid.isPair(playerIndex, int(key))
+                            if response == True:
+                                print("\nPareja bajada!\n")
+                            else:
+                                print("\nNo existe una pareja con ese numero\n")
 
-
-
+                            status = game_oldmaid.getStatus()
+                            for pl in status['players']:
+                                if pl["username"] == my_username:
+                                    print("\n------> MI MANO: ", pl['hand'])
+                        print("Ya no hay mas parejas")
                         time.sleep(10000)
                                                                                       
 
