@@ -16,6 +16,8 @@ import sys
 import pickle
 import threading
 import time
+#Importamos clase OldMaid()
+import oldmaid as om
 # variables globales
 HEADER_LENGTH = 10 
 IP = "127.0.0.1"
@@ -23,6 +25,7 @@ PORT = 5555
 breakmech = False
 flag_room = False
 not_enough_players = True
+players_in_ma_room = []
 
 
 # make conncection
@@ -70,7 +73,8 @@ def signinok(username,roomID):
         "username":username,
         "roomID":roomID,
         "winner": 0,
-        "is_turn": 0
+        "turn": 0,
+        "hand": []
     }
     # serializing dprotocol
     msg = pickle.dumps(dprotocol)
@@ -216,6 +220,9 @@ def thread_function(my_username):
                 with lock:
                     flag_room = True
             elif (message['data']['type'] == 'you_can_play_now'):
+                for pl in message['data']['players']:
+                    pl['turn'] = message['data']['turn']
+                    players_in_ma_room.append(pl)
                 with game_lock:
                     not_enough_players = False
 
@@ -295,11 +302,42 @@ def client_on():
                 while not_enough_players:
                     print(" ¡espera! pronto se conectaran tus amigos")
                     time.sleep(5)
-                while game_on:
-                    print("EMPIEZA OLD MAID PUES PAPA")
-                    time.sleep(10)
-                #game_function()
 
+                # ------------------------------ AQUI EMPIEZA OLD MAID ------------------------------
+                while game_on:
+                    game_oldmaid = om.OldMaid(players_in_ma_room)
+                    status = game_oldmaid.getStatus()
+                    print("\n\n    ______    ___       ________       ___      ___       __        __     ________   ")
+                    print("   /      \  |   |     |        \     |   \    /   |     /  \      |  \   |        \  ")
+                    print("  // ____  \ ||  |     (.  ___  :)     \   \  //   |    /    \     ||  |  (.  ___  :) ")
+                    print(" /  /    ) :)|:  |     |: \   ) ||     /\\  \/.    |   /' /\  \    |:  |  |: \   ) || ")
+                    print("(: (____/ //  \  |___  (| (___\ ||    |: \.        |  //  __'  \   |.  |  (| (___\ || ")
+                    print(" \        /  ( \_|:  \ |:       :)    |.  \    /:  | /   /  \\  \  /\  |\ |:       :) ")
+                    print("  \"_____/    \_______)(________/     |___|\__/|___|(___/    \___)(__\_|_)(________/  \n\n")
+                    #primer turno
+                    if(status['turn'] == 1):
+                        print("\n\nEs el primer turno, por lo que debes armar parejas con las cartas de tu mano")
+                        print("Para hacerlo, solo debes escribir el número de la carta que tiene una pareja")
+                        print("Por ejemplo, si yo tuviera en mi mano [...(2, 'Diamond'), (2, 'Heart')...]")
+                        print("Solo debo escribir: 2 para armar la pareja\n\n")
+
+                        for pl in status['players']:
+                            if pl["username"] == my_username:
+                                print("------> MI MANO: ", pl['hand'])
+
+                        #no hay progra defensiva todavia
+                        pairs_down = True
+                        while pairs_down:
+                            print(status['players']['turn'])
+                            key = input("¿qué pareja bajas a la mesa? ")
+
+
+
+                        time.sleep(10000)
+                                                                                      
+
+                #game_function()
+                # ------------------------------ AQUI TERMINA OLD MAID ------------------------------
             elif optmenu == 9:
                 #salir del programa
                 breakmech = True

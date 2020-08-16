@@ -15,7 +15,7 @@ class OldMaid(object):
                 # Lista de jugadores. Cada jugador es un diccionario
                 self.players = players
                 # Turnos globales
-                self.turn = 0
+                self.turn = 1
                 # A que jugador le toca, solo puede ser 0, 1, 2
                 self.playerTurn = 0
                 # Aca estaran todas las parejas que bajen los jugadores
@@ -64,7 +64,7 @@ class OldMaid(object):
                 hand = self.players[playerIndex]['hand']
                 for i in range(len(hand)):
                         current = hand[i]
-                        for j in range(i+1,len(hand)):
+                        for j in range(len(hand)):
                                 possible = hand[j]
                                 # Chequea si hay pareja
                                 if current[0] == possible[0]:
@@ -97,3 +97,11 @@ class OldMaid(object):
                 self.nextTurn()
                 # Se devuelve la pareja que se encontró
                 return pareja
+
+        def getStatus(self):
+                return {
+                        'turn': self.turn,
+                        'board': self.board,
+                        'players': self.players
+                        'index_of_player_in_turn': self.playerTurn
+                }

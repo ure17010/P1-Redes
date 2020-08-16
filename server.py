@@ -160,12 +160,13 @@ def rooms_management(cs, message, roomID):
 
 def room_ready_play(players):
     """ Funcion que maneja el caso de uso cuando un lobby de juego tiene la cantidad esperada de jugadores: 3 """
-    turnos = [1 , 2, 3]
+    turnos = [0 , 1, 2]
     random.shuffle(turnos)
     for pl in players:
         dprotocol = {
             'type': 'you_can_play_now',
             'turn': turnos.pop(),
+            'players': players
         }
         # serializing dprotocol
         msg = pickle.dumps(dprotocol)
@@ -176,8 +177,6 @@ def room_ready_play(players):
         for cl in clients:
             if clients[cl]['username'] == pl['username']:
                 cl.send(msg)
-
-
 
 def server_on():
     off = False
