@@ -9,7 +9,7 @@ Estuardo Ureta - Oliver Mazariegos - Pablo Viana
 import itertools, random
 
 class OldMaid(object):
-        def __init__(self,players):
+        def __init__(self,players,copy):
                 # Lista de jugadores. Cada jugador es un diccionario
                 self.players = players
                 # Turnos globales
@@ -19,8 +19,8 @@ class OldMaid(object):
                 # Aca estaran todas las parejas que bajen los jugadores
                 # las parejas las bajaremos en forma de tupla
                 self.board = []
-                self.shuffle()
-
+                if not copy:
+                        self.shuffle()
         # Funcion que genera un deck, lo revuelve y reparte cartas a cada jugador
         def shuffle(self):
                 # crea deck
@@ -140,6 +140,9 @@ class OldMaid(object):
                 return oponent
 
         def getStatus(self):
+                print(self.playerTurn)
+                print(self.players)
+                print(len(self.players))
                 return {
                         'turn': self.turn,
                         'board': self.board,
