@@ -2,9 +2,7 @@
 Universidad del Valle de Guatemala 
 Redes
 CAtedrático: Vinicio Paz
-
 Estuardo Ureta - Oliver Mazariegos - Pablo Viana
-
 -> Un cliente para un servidor en python para jugar old maid
 """
 
@@ -101,11 +99,12 @@ def room_id(client_socket, roomID, my_username):
     msg = bytes(f"{len(msg):<{HEADER_LENGTH}}", "utf-8") + msg
     client_socket.send(msg)
 
-def sendmessage(msgtype, message, username):
+def sendmessage(msgtype, message, username, hand):
     dprotocol = {
         "type":msgtype,
         "message": message,
-        "username": username
+        "username": username,
+        "hand": hand
     }
     # serializing dprotocol
     msg = pickle.dumps(dprotocol)
@@ -250,7 +249,6 @@ def pairs_down(game_oldmaid, playerIndex, my_username):
             print("el mio ",my_username)
             if pl["username"] == my_username:
                 print("\n------> MI MANO: ", pl['hand'])
-
         key = input("¿qué pareja bajas a la mesa? ")
         response = game_oldmaid.isPair(playerIndex, int(key))
         if response == True:
@@ -267,7 +265,7 @@ def pairs_down(game_oldmaid, playerIndex, my_username):
     print("  _| |__| |")
     print(" (_)_____/ \n")
 
-    sendmessage('im_done','im done',my_username)
+    sendmessage('im_done','im done',my_username,'hand')
 
     return True
 
@@ -371,14 +369,16 @@ def client_on():
                         while pairs_not_down:
                             continue
                         game_oldmaid.nextTurn()
+                        #self.updateMessage()
+                        
 
                     status = game_oldmaid.getStatus()
                     if(playerIndex == status['index_of_player_in_turn']):
                         print("\n-----! ES TU TURNO !-----")
-                        status2 = game_oldmaid.getStatus()
-                        print(f"debes quitar una carta de la mano de {status2['oponent']['username']}")
-                        print(f"{status2['oponent']['username']} tiene {len(status2['oponent']['hand'])} cartas")
-                        visualization = list(itertools.product(range(1,len(status2['oponent']['hand'])),['carta desconocida']))                        
+                        status = game_oldmaid.getStatus()
+                        print(f"debes quitar una carta de la mano de {status['oponent']['username']}")
+                        print(f"{status['oponent']['username']} tiene {len(status['oponent']['hand'])} cartas")
+                        visualization = list(itertools.product(range(1,len(status['oponent']['hand'])),['carta desconocida']))                        
                         print("\n\n", visualization)
                         decition = input("¿que carta deseas quitar al oponente? (? empieza en 0) ")
                         while decition_flag:
