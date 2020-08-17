@@ -149,6 +149,20 @@ def sendPair(pair,hand):
     msg = bytes(f"{len(msg):<{HEADER_LENGTH}}", "utf-8") + msg
     client_socket.send(msg)
 
+def im_done(roomid,hand,username):
+    dprotocol = {
+        "type":'im_done',
+        "room_id": roomid,
+        "username": username,
+        "hand": hand
+    }
+    # serializing dprotocol
+    msg = pickle.dumps(dprotocol)
+    # adding header to msg
+    msg = bytes(f"{len(msg):<{HEADER_LENGTH}}", "utf-8") + msg
+    client_socket.send(msg)
+
+
 def pickCard(cardpos):
     """ Esta funcion le manda la carta que escoge de la mano del contrincante"""
     dprotocol = {
@@ -275,6 +289,7 @@ def pairs_down(game_oldmaid, playerIndex, my_username,roomid):
     print(" (_)_____/ \n")
 
     sendmessage('im_done',roomid,my_username)
+    im_done(roomid,hand,my_username)
 
     return True
 
