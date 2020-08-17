@@ -1,5 +1,6 @@
-Juego de cartas: Old Maid
-Explicación e historia:
+# Juego de cartas:
+## Old Maid
+### Explicación e historia:
 Old Maid es el nombre de un juego de cartas simple que requiere al menos dos jugadores pero puede llegar hasta 8 jugadores.
 La traducción lógica para Old Maid es <Solterona>. 
 En esencia una solterona es una mujer que no está casada. Es una frase despectiva que se utiliza para describir a una mujer que se considera "vieja" y que no tiene marido.
@@ -13,10 +14,9 @@ Old Maid se juega con una baraja estándar de 52 cartas. Se consideraba que la r
 Una de las otras tres reinas se eliminó del mazo para asegurarse de que la carta de Old Maid no coincidiera.
 
 
-Instalaciones:
+### Instalaciones:
 No se requiere la instalación de ninguna librería ya que las utilizadas vienen en el estándar. 
-
-Librerias utilizadas:
+### Librerias utilizadas:
 import socket
 import select
 import errno
@@ -28,7 +28,7 @@ import itertools
 import random
 import datetime
 
-Versiones y para la ejecución:
+### Versiones y para la ejecución:
 Local:
 Para la ejecución local del programa es importante primero descargarlo en github y clonar. 
 En la ubicación de la carpeta correr en la terminal el archivo server.py para inicializarlo. 
