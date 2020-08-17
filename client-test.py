@@ -31,6 +31,15 @@ lock = threading.RLock()
 #un lock para cada variable ¿? no sé 
 game_lock = threading.RLock()
 
+dummy = []
+for i in range(3):
+    dummyPlayer = {
+        'username':'',
+        'hand':[]
+    }
+    dummy.append(dummyPlayer)
+serverOldMaid = om.OldMaid(dummy, False)
+
 
 # make conncection
 client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -209,6 +218,7 @@ def thread_function(my_username):
     global pairs_not_down
     global not_my_turn
     global players_in_ma_room
+    global serverOldMaid
     while True:
         message = receive_message(client_socket)
         if message:
@@ -232,6 +242,7 @@ def thread_function(my_username):
                     not_enough_players = False
             elif (message['data']['type'] == 'all_pairs_down'):
                 pairs_not_down = False
+                serverOldMaid = message['data']['oldmaid']
             elif (message['data']['type'] == 'your_turn'):
                 not_my_turn = False
         if breakmech:
@@ -343,7 +354,7 @@ def client_on():
                 copy = True
                 print(players_in_ma_room)
                 game_oldmaid = om.OldMaid(players_in_ma_room,True)
-                roomid = game_oldmaid.getPlayers[0]['roomID']
+                roomid = game_oldmaid.getPlayers()[0]['roomID']
                 decition_flag = True
                 print("\n\n    ______    ___       ________       ___      ___       __        __     ________   ")
                 print("   /      \  |   |     |        \     |   \    /   |     /  \      |  \   |        \  ")
@@ -371,8 +382,8 @@ def client_on():
                         print("esperando a que todos bajen sus cartas")
                         while pairs_not_down:
                             continue
-                        game_oldmaid.removePairs()
-                        game_oldmaid.nextTurn()
+                        game_oldmaid = serverOldMaid
+                        print(game_oldmaid.getStatus())
                         self.updateMessage()
                         
 
