@@ -265,6 +265,7 @@ def server_on():
                         roomid = message['data']['room_id']
                         for rm in rooms:
                             if rooms[rm]['players'][0]['roomID'] == roomid:
+                                print(f"HAND: {message['data']['hand']}")
                                 rooms[rm]['oldmaid'].setHand(message['data']['username'],message['data']['hand'])
                         if cont == 3:
                             for rm in rooms:

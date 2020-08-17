@@ -126,7 +126,7 @@ class OldMaid(object):
                 # Se le quita carta al jugador a la derecha, y se le agrega a la mano del jugador actual
                 self.players[self.playerTurn]['hand'].append(self.players[oponent]['hand'].pop(cardPicked))
                 # Se actualiza el turno del jugador
-                
+                self.players[self.playerTurn]['hand']
                 # Se devuelve la pareja que se encontró
                 return True
 

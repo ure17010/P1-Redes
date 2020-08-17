@@ -26,7 +26,6 @@ flag_room = False
 pairs_not_down = True
 not_enough_players = True
 not_my_turn = True
-cardPicked = False
 players_in_ma_room = []
 lock = threading.RLock()
 #un lock para cada variable ¿? no sé 
@@ -164,12 +163,11 @@ def im_done(roomid,hand,username):
     client_socket.send(msg)
 
 
-def pickCard(cardpos,roomid):
+def pickCard(cardpos):
     """ Esta funcion le manda la carta que escoge de la mano del contrincante"""
     dprotocol = {
         "type":"pickCard",
-        'cardpos': cardpos,
-        'room_id': roomid
+        'cardpos': cardpos
     }
     # serializing dprotocol
     msg = pickle.dumps(dprotocol)
@@ -235,7 +233,6 @@ def thread_function(my_username):
     global not_my_turn
     global players_in_ma_room
     global serverOldMaid
-    global cardPicked
     while True:
         message = receive_message(client_socket)
         if message:
@@ -262,9 +259,6 @@ def thread_function(my_username):
                 pairs_not_down = False
             elif (message['data']['type'] == 'your_turn'):
                 not_my_turn = False
-            elif (message['data']['type'] == 'cardPick'):
-                serverOldMaid = message['data']['oldmaid']
-                cardPicked = True
         if breakmech:
             break
 
@@ -378,7 +372,7 @@ def client_on():
 
                 # ------------------------------ AQUI EMPIEZA OLD MAID ------------------------------
                 copy = True
-                game_oldmaid = om.OldMaid(players_in_ma_room,copy)
+                game_oldmaid = om.OldMaid(players_in_ma_room,True)
                 roomid = game_oldmaid.getPlayers()[0]['roomID']
                 decition_flag = True
                 print("\n\n    ______    ___       ________       ___      ___       __        __     ________   ")
@@ -408,7 +402,6 @@ def client_on():
                         while pairs_not_down:
                             continue
                         game_oldmaid = serverOldMaid
-                        #print(game_oldmaid.getStatus())
                         #self.updateMessage()
                         
 
@@ -427,12 +420,8 @@ def client_on():
                                 decition = int(input("¿que carta deseas quitar al oponente? (? empieza en 0) "))
                             else:
                                 decition_flag = False
-                        pickCard(decition,roomid)
-                        while not cardPicked:
-                            continue
-                        game_oldmaid = serverOldMaid
-                        pairs_down(game_oldmaid, playerIndex, my_username)
-                        cardPicked = False
+                        game_oldmaid.move(decition)
+                        pairs_down(game_oldmaid, playerIndex, my_username, roomid)
                         not_my_turn = True
                     else:
                         print(f"!---- AHORA ES EL TURNO DE {status['player_in_turn']['username']}")
