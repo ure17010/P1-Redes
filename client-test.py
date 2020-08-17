@@ -26,6 +26,7 @@ flag_room = False
 pairs_not_down = True
 not_enough_players = True
 not_my_turn = True
+cardPicked = False
 players_in_ma_room = []
 lock = threading.RLock()
 #un lock para cada variable ¿? no sé 
@@ -163,11 +164,12 @@ def im_done(roomid,hand,username):
     client_socket.send(msg)
 
 
-def pickCard(cardpos):
+def pickCard(cardpos,roomid):
     """ Esta funcion le manda la carta que escoge de la mano del contrincante"""
     dprotocol = {
         "type":"pickCard",
-        'cardpos': cardpos
+        'cardpos': cardpos,
+        'room_id': roomid
     }
     # serializing dprotocol
     msg = pickle.dumps(dprotocol)
@@ -233,6 +235,7 @@ def thread_function(my_username):
     global not_my_turn
     global players_in_ma_room
     global serverOldMaid
+    global cardPicked
     while True:
         message = receive_message(client_socket)
         if message:
@@ -255,21 +258,23 @@ def thread_function(my_username):
                     players_in_ma_room = message['data']['players']
                     not_enough_players = False
             elif (message['data']['type'] == 'all_pairs_down'):
-                pairs_not_down = False
                 serverOldMaid = message['data']['oldmaid']
+                pairs_not_down = False
             elif (message['data']['type'] == 'your_turn'):
                 not_my_turn = False
+            elif (message['data']['type'] == 'cardPick'):
+                serverOldMaid = message['data']['oldmaid']
+                cardPicked = True
         if breakmech:
             break
 
 def pairs_down(game_oldmaid, playerIndex, my_username,roomid):
     """Esta funcion es la encargada de la jugabilidad de bajar las parejas de cartas"""
     #no hay progra defensiva todavia
+    hand = []
     while game_oldmaid.hasPair(playerIndex):
         status = game_oldmaid.getStatus()
         for pl in status['players']:
-            print("recibido ", pl['username'])
-            print("el mio ",my_username)
             if pl["username"] == my_username:
                 print("\n------> MI MANO: ", pl['hand'])
         key = input("¿qué pareja bajas a la mesa? ")
@@ -278,6 +283,12 @@ def pairs_down(game_oldmaid, playerIndex, my_username,roomid):
             print("\nPareja bajada!\n")
         else:
             print("\nNo existe una pareja con ese numero\n")
+    
+    status = game_oldmaid.getStatus()
+    for pl in status['players']:
+        if pl['username'] == my_username:
+            hand = pl['hand']
+
 
                         
     print("\n    _____  ")
@@ -288,7 +299,7 @@ def pairs_down(game_oldmaid, playerIndex, my_username,roomid):
     print("  _| |__| |")
     print(" (_)_____/ \n")
 
-    sendmessage('im_done',roomid,my_username)
+
     im_done(roomid,hand,my_username)
 
     return True
@@ -367,8 +378,7 @@ def client_on():
 
                 # ------------------------------ AQUI EMPIEZA OLD MAID ------------------------------
                 copy = True
-                print(players_in_ma_room)
-                game_oldmaid = om.OldMaid(players_in_ma_room,True)
+                game_oldmaid = om.OldMaid(players_in_ma_room,copy)
                 roomid = game_oldmaid.getPlayers()[0]['roomID']
                 decition_flag = True
                 print("\n\n    ______    ___       ________       ___      ___       __        __     ________   ")
@@ -398,8 +408,8 @@ def client_on():
                         while pairs_not_down:
                             continue
                         game_oldmaid = serverOldMaid
-                        print(game_oldmaid.getStatus())
-                        self.updateMessage()
+                        #print(game_oldmaid.getStatus())
+                        #self.updateMessage()
                         
 
                     status2 = game_oldmaid.getStatus()
@@ -408,17 +418,21 @@ def client_on():
                         status3 = game_oldmaid.getStatus()
                         print(f"debes quitar una carta de la mano de {status3['oponent']['username']}")
                         print(f"{status3['oponent']['username']} tiene {len(status3['oponent']['hand'])} cartas")
-                        visualization = list(itertools.product(range(1,len(status3['oponent']['hand'])),['carta desconocida']))                        
+                        visualization = list(itertools.product(range(len(status3['oponent']['hand'])),['carta desconocida']))                        
                         print("\n\n", visualization)
-                        decition = input("¿que carta deseas quitar al oponente? (? empieza en 0) ")
+                        decition = int(input("¿que carta deseas quitar al oponente? (? empieza en 0) "))
                         while decition_flag:
-                            if int(decition) > len(status['oponent']['hand']):
+                            if decition > len(status['oponent']['hand']):
                                 print("\n¡tu oponente no tiene tantas cartas!")
-                                decition = input("¿que carta deseas quitar al oponente? (? empieza en 0) ")
+                                decition = int(input("¿que carta deseas quitar al oponente? (? empieza en 0) "))
                             else:
                                 decition_flag = False
-                        game_oldmaid.move(decition)
+                        pickCard(decition,roomid)
+                        while not cardPicked:
+                            continue
+                        game_oldmaid = serverOldMaid
                         pairs_down(game_oldmaid, playerIndex, my_username)
+                        cardPicked = False
                         not_my_turn = True
                     else:
                         print(f"!---- AHORA ES EL TURNO DE {status['player_in_turn']['username']}")

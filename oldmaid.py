@@ -126,7 +126,7 @@ class OldMaid(object):
                 # Se le quita carta al jugador a la derecha, y se le agrega a la mano del jugador actual
                 self.players[self.playerTurn]['hand'].append(self.players[oponent]['hand'].pop(cardPicked))
                 # Se actualiza el turno del jugador
-                self.nextTurn()
+                
                 # Se devuelve la pareja que se encontró
                 return True
 
@@ -140,9 +140,6 @@ class OldMaid(object):
                 return oponent
 
         def getStatus(self):
-                print(self.playerTurn)
-                print(self.players)
-                print(len(self.players))
                 return {
                         'turn': self.turn,
                         'board': self.board,
@@ -168,3 +165,8 @@ class OldMaid(object):
         
         def getPlayers(self):
                 return self.players
+
+        def setHand(self,username,hand):
+                for index, pl in enumerate(self.players):
+                        if self.players[index]['username'] == username:
+                                self.players[index]['hand'] = hand

@@ -33,6 +33,8 @@ print(f"Server listening in {IP}:{PORT}")
 #Una lista con todos los sockets
 sockets_list = [server_socket]
 
+
+
 def receive_message(client_socket):
     """Esta función deserializa el mensaje y lo regresa como un json"""
     try:
@@ -45,6 +47,21 @@ def receive_message(client_socket):
         return {"header": message_header, "data": data}
     except:
         return False
+
+def cardPick(oldmaid):
+    """Función que avisa al cliente si se unio a un grupo o creo uno nuevo"""
+    dprotocol = {
+        'type': 'cardPick',
+        'oldmaid': oldmaid
+    }
+    
+    msg = pickle.dumps(dprotocol)
+    # adding header to msg
+    msg = bytes(f"{len(msg):<{HEADER_LENGTH}}", "utf-8") + msg
+    #print(msg)
+    client_socket.send(msg)
+    
+    return True
 
 def room_created(client_socket, type_msg, roomid, players):
     """Función que avisa al cliente si se unio a un grupo o creo uno nuevo"""
@@ -226,7 +243,7 @@ def server_on():
                 else:
                     # recibimos mensaje del server
                     message = receive_message(notified_socket)
-                    print(message)
+                    #print(message)
 
                     if message is False:
                         #Se cierra la conexión
@@ -245,15 +262,23 @@ def server_on():
                         rooms_management(notified_socket, message, message['data']['roomid'])
                     elif message['data']['type'] == 'im_done':
                         cont += 1
+                        roomid = message['data']['room_id']
+                        for rm in rooms:
+                            if rooms[rm]['players'][0]['roomID'] == roomid:
+                                rooms[rm]['oldmaid'].setHand(message['data']['username'],message['data']['hand'])
                         if cont == 3:
-                            roomid = message['data']['message']
                             for rm in rooms:
                                 if rooms[rm]['players'][0]['roomID'] == roomid:
-                                    rooms[rm]['oldmaid'].removePairs()
                                     oldmaid = rooms[rm]['oldmaid']
                             all_done(notified_socket, oldmaid)
 
                             cont = 0
+                    elif message['data']['type'] == 'pickCard':
+                        roomid = message['data']['room_id']
+                        for rm in rooms:
+                            if rooms[rm]['players'][0]['roomID'] == roomid:
+                                rooms[rm]['oldmaid'].move(message['data']['cardpos'])
+
                     elif message['data']['type'] == 'hand':
                         rooms_management(notified_socket, message, message['data']['hand'])
                     else:
@@ -265,7 +290,7 @@ def server_on():
                     if len(rooms[rm]['players']) == 3:
                         #Inicializar el OldMaid para ese room
                         copy = False
-                        print(rooms[rm]['players'])
+                        #print(rooms[rm]['players'])
                         rooms[rm]['oldmaid'] = OldMaid(rooms[rm]['players'], copy)
                         #Indicar que estan listos para jugar
                         room_ready_play(rooms[rm]['oldmaid'])
