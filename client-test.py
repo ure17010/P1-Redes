@@ -267,8 +267,8 @@ def pairs_down(game_oldmaid, playerIndex, my_username,roomid):
     #no hay progra defensiva todavia
     hand = []
     while game_oldmaid.hasPair(playerIndex):
-        status = game_oldmaid.getStatus()
-        for pl in status['players']:
+        players = game_oldmaid.getPlayers()
+        for pl in players:
             if pl["username"] == my_username:
                 print("\n------> MI MANO: ", pl['hand'])
         key = input("¿qué pareja bajas a la mesa? ")
@@ -279,7 +279,7 @@ def pairs_down(game_oldmaid, playerIndex, my_username,roomid):
             print("\nNo existe una pareja con ese numero\n")
     
     status = game_oldmaid.getStatus()
-    for pl in status['players']:
+    for pl in game_oldmaid.getPlayers():
         if pl['username'] == my_username:
             hand = pl['hand']
 
