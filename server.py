@@ -2,9 +2,7 @@
 Universidad del Valle de Guatemala 
 Redes
 CAtedrático: Vinicio Paz
-
 Estuardo Ureta - Oliver Mazariegos - Pablo Viana
-
 -> Un servidor en python que administre un juego de old maid
 """
 import socket
@@ -166,7 +164,8 @@ def room_ready_play(players):
         dprotocol = {
             'type': 'you_can_play_now',
             'turn': turnos.pop(),
-            'players': players
+            'players': players#,
+            #'hand': hand
         }
         # serializing dprotocol
         msg = pickle.dumps(dprotocol)
@@ -250,6 +249,8 @@ def server_on():
                         if cont == 3:
                             all_done(notified_socket)
                             cont = 0
+                    elif message['data']['type'] == 'hand':
+                        rooms_management(notified_socket, message, message['data']['hand'])
                     else:
                         print("falta implementar")
 
