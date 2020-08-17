@@ -264,7 +264,7 @@ def pairs_down(game_oldmaid, playerIndex, my_username):
     print("  _| |__| |")
     print(" (_)_____/ \n")
 
-    sendmessage('im_done','im done',my_username,'hand')
+    sendmessage('im_done','im done',my_username)
 
     return True
 

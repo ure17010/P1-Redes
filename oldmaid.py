@@ -148,3 +148,20 @@ class OldMaid(object):
                         'index_of_player_in_turn': self.playerTurn,
                         'oponent': self.players[self.oponent()]
                 }
+        
+        # Función que chequea si jugador tiene parejas y la devuelve
+        def removePairs(self):
+                for index, player in enumerate(self.players):
+                        hand = player['hand']
+                        for i in range(len(hand)):
+                                current = hand[i]
+                                for j in range(i+1,len(hand)):
+                                        possible = hand[j]
+                                        # Chequea si hay pareja
+                                        if current[0] == possible[0]:
+                                                self.players[index]['hand'].pop(j)
+                                                self.players[index]['hand'].pop(i)
+                                                break
+        
+        def getPlayers(self):
+                return self.players

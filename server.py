@@ -10,6 +10,7 @@ import select
 import pickle
 import datetime
 import random
+from oldmaid import *
 
 #Variables globales
 HEADER_LENGTH = 10 
@@ -156,7 +157,7 @@ def rooms_management(cs, message, roomID):
             rooms[roomID] = lobby
             room_created(cs, 'created', roomID, [])
 
-def room_ready_play(players):
+def room_ready_play(OldMaid):
     """ Funcion que maneja el caso de uso cuando un lobby de juego tiene la cantidad esperada de jugadores: 3 """
     turnos = [0 , 1, 2]
     random.shuffle(turnos)
@@ -164,7 +165,8 @@ def room_ready_play(players):
         dprotocol = {
             'type': 'you_can_play_now',
             'turn': turnos.pop(),
-            'players': players
+            'players': OldMaid.getPlayers(),
+            'oldmaid': OldMaid
         }
         # serializing dprotocol
         msg = pickle.dumps(dprotocol)
@@ -246,6 +248,7 @@ def server_on():
                     elif message['data']['type'] == 'im_done':
                         cont += 1
                         if cont == 3:
+                            
                             all_done(notified_socket)
                             cont = 0
                     elif message['data']['type'] == 'hand':
@@ -258,7 +261,8 @@ def server_on():
                     #verificar si alguno tiene tres jugadores
                     if len(rooms[rm]['players']) == 3:
                         #Indicar que estan listos para jugar
-                        room_ready_play(rooms[rm]['players'])
+                        rooms[rm]['oldmaid'] = OldMaid(rooms[rm]['players'])
+                        room_ready_play(rooms[rm]['oldmaid'])
 
                 for notified_socket in exception_sockets:
                     sockets_list.remove(notified_socket)
