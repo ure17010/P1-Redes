@@ -164,8 +164,7 @@ def room_ready_play(players):
         dprotocol = {
             'type': 'you_can_play_now',
             'turn': turnos.pop(),
-            'players': players#,
-            #'hand': hand
+            'players': players
         }
         # serializing dprotocol
         msg = pickle.dumps(dprotocol)
