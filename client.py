@@ -99,12 +99,11 @@ def room_id(client_socket, roomID, my_username):
     msg = bytes(f"{len(msg):<{HEADER_LENGTH}}", "utf-8") + msg
     client_socket.send(msg)
 
-def sendmessage(msgtype, message, username, hand):
+def sendmessage(msgtype, message, username):
     dprotocol = {
         "type":msgtype,
         "message": message,
-        "username": username,
-        "hand": hand
+        "username": username
     }
     # serializing dprotocol
     msg = pickle.dumps(dprotocol)
@@ -369,16 +368,16 @@ def client_on():
                         while pairs_not_down:
                             continue
                         game_oldmaid.nextTurn()
-                        #self.updateMessage()
+                        self.updateMessage()
                         
 
-                    status = game_oldmaid.getStatus()
-                    if(playerIndex == status['index_of_player_in_turn']):
+                    status2 = game_oldmaid.getStatus()
+                    if(playerIndex == status2['index_of_player_in_turn']):
                         print("\n-----! ES TU TURNO !-----")
-                        status = game_oldmaid.getStatus()
-                        print(f"debes quitar una carta de la mano de {status['oponent']['username']}")
-                        print(f"{status['oponent']['username']} tiene {len(status['oponent']['hand'])} cartas")
-                        visualization = list(itertools.product(range(1,len(status['oponent']['hand'])),['carta desconocida']))                        
+                        status3 = game_oldmaid.getStatus()
+                        print(f"debes quitar una carta de la mano de {status3['oponent']['username']}")
+                        print(f"{status3['oponent']['username']} tiene {len(status3['oponent']['hand'])} cartas")
+                        visualization = list(itertools.product(range(1,len(status3['oponent']['hand'])),['carta desconocida']))                        
                         print("\n\n", visualization)
                         decition = input("¿que carta deseas quitar al oponente? (? empieza en 0) ")
                         while decition_flag:
