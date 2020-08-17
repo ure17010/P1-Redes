@@ -30,6 +30,7 @@ players_in_ma_room = []
 lock = threading.RLock()
 #un lock para cada variable ¿? no sé 
 game_lock = threading.RLock()
+primeraBajada = True
 
 dummy = []
 for i in range(3):
@@ -305,6 +306,7 @@ def client_on():
     global client_socket
     global pairs_not_down
     global not_my_turn
+    global primeraBajada
     client_off = False
     signedin = False
     game_on = True
@@ -401,7 +403,11 @@ def client_on():
                         print("esperando a que todos bajen sus cartas")
                         while pairs_not_down:
                             continue
-                        game_oldmaid = serverOldMaid
+                        if primeraBajada:
+                            game_oldmaid = serverOldMaid
+                            with lock:
+                                primeraBajada = False
+                        print(game_oldmaid.getPlayers()[0]['hand'])
                         #self.updateMessage()
                         
 

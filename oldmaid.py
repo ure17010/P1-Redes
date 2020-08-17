@@ -20,6 +20,7 @@ class OldMaid(object):
                 # las parejas las bajaremos en forma de tupla
                 self.board = []
                 if not copy:
+                        print('Se llamo el shuffle')
                         self.shuffle()
         # Funcion que genera un deck, lo revuelve y reparte cartas a cada jugador
         def shuffle(self):
@@ -123,10 +124,13 @@ class OldMaid(object):
         # Función que hace un movimiento. Recibe el index de la carta que quiere robar el jugador 
         def move(self, cardPicked):
                 oponent = self.oponent()
+                print(f"hand before move {self.players[self.playerTurn]['hand']}")
                 # Se le quita carta al jugador a la derecha, y se le agrega a la mano del jugador actual
                 self.players[self.playerTurn]['hand'].append(self.players[oponent]['hand'].pop(cardPicked))
+                print(f"hand after move {self.players[self.playerTurn]['hand']}")
+
                 # Se actualiza el turno del jugador
-                self.players[self.playerTurn]['hand']
+                
                 # Se devuelve la pareja que se encontró
                 return True
 
@@ -169,4 +173,6 @@ class OldMaid(object):
         def setHand(self,username,hand):
                 for index, pl in enumerate(self.players):
                         if self.players[index]['username'] == username:
+                                print(f"HAND BEFORE SET: {self.players[index]['hand']}")
                                 self.players[index]['hand'] = hand
+                                print(f"HAND AFTER SET: {self.players[index]['hand']}")

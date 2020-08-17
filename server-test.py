@@ -265,8 +265,12 @@ def server_on():
                         roomid = message['data']['room_id']
                         for rm in rooms:
                             if rooms[rm]['players'][0]['roomID'] == roomid:
-                                print(f"HAND: {message['data']['hand']}")
-                                rooms[rm]['oldmaid'].setHand(message['data']['username'],message['data']['hand'])
+                                for player in rooms[rm]['players']:
+                                    if player['username'] == message['data']['username']:
+                                        print(f"HAND: {message['data']['hand']}")
+                                        rooms[rm]['oldmaid'].setHand(message['data']['username'],message['data']['hand'])
+                                        print(rooms[rm]['oldmaid'].getPlayers())
+
                         if cont == 3:
                             for rm in rooms:
                                 if rooms[rm]['players'][0]['roomID'] == roomid:
@@ -289,12 +293,13 @@ def server_on():
                 for rm in rooms:
                     #verificar si alguno tiene tres jugadores
                     if len(rooms[rm]['players']) == 3:
-                        #Inicializar el OldMaid para ese room
-                        copy = False
-                        #print(rooms[rm]['players'])
-                        rooms[rm]['oldmaid'] = OldMaid(rooms[rm]['players'], copy)
-                        #Indicar que estan listos para jugar
-                        room_ready_play(rooms[rm]['oldmaid'])
+                        if not rooms[rm]['players'][0]['hand']:
+                            #Inicializar el OldMaid para ese room
+                            copy = False
+                            #print(rooms[rm]['players'])
+                            rooms[rm]['oldmaid'] = OldMaid(rooms[rm]['players'], copy)
+                            #Indicar que estan listos para jugar
+                            room_ready_play(rooms[rm]['oldmaid'])
 
                 for notified_socket in exception_sockets:
                     sockets_list.remove(notified_socket)
