@@ -29,7 +29,11 @@ import random
 import datetime
 
 ### Versiones y para la ejecución:
-Local:
+#### Local:
 Para la ejecución local del programa es importante primero descargarlo en github y clonar. 
 En la ubicación de la carpeta correr en la terminal el archivo server.py para inicializarlo. 
-Corriendo cliente.py seguir instrucciones para el usuario.
+#### Online:
+Se ha implementado el uso de Amazon Web Services (aws). 
+Esto para montar el servidor en la nube y se incluyen todos los datos de conexión.
+
+#### Corriendo cliente.py seguir instrucciones para el usuario.
