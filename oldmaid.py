@@ -2,9 +2,7 @@
 Universidad del Valle de Guatemala 
 Redes
 CAtedrático: Vinicio Paz
-
 Estuardo Ureta - Oliver Mazariegos - Pablo Viana
-
 -> Logica del juego Old Maid
 """
 
@@ -96,10 +94,20 @@ class OldMaid(object):
                                         cards.append(i)
                                         cont -=1
                                 if cont == 0:
-                                        uno = self.players[playerIndex]['hand'].pop(cards[1])
-                                        dos = self.players[playerIndex]['hand'].pop(cards[0])
-                                        self.board.append((uno,dos))
+                                        #st = self.getStatus()
+                                        #print(st)
+                                        #self.oponent[playerIndex]['hand'].pop(cards[1])
+                                        #self.oponent[playerIndex]['hand'].pop(cards[0])
+                                        self.board.append((self.players[playerIndex]['hand'].pop(cards[1]),self.players[playerIndex]['hand'].pop(cards[0])))
+                                        #self.oponent[playerIndex]['hand'].pop(cards[1])
+                                        #self.oponent[playerIndex]['hand'].pop(cards[0])
+                                        #self.players[playerIndex]['hand'].pop(cards[1])
+                                        #self.players[playerIndex]['hand'].pop(cards[0])
+                                        #stat = self.getStatus()
+                                        #print(stat)
                                         break
+                                        #return self.players[playerIndex]['hand']
+
                         return True
                 else:
                         return False
