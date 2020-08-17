@@ -37,4 +37,4 @@ Ip: 18.222.142.27
 Se ha implementado el uso de Amazon Web Services (aws). 
 Esto para montar el servidor en la nube y se incluyen todos los datos de conexión.
 
-#### Corriendo cliente.py seguir instrucciones para el usuario.
+#### Corriendo cliente.py para cada uno de los usuarios, seguir instrucciones para cada uno.
