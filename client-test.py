@@ -439,6 +439,7 @@ def client_on():
                         print("esperando a que todos bajen sus cartas")
                         while pairs_not_down:
                             continue
+                        pairs_not_down = True
                         if primeraBajada:
                             game_oldmaid = serverOldMaid
                             with lock:

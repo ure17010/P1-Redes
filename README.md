@@ -13,6 +13,110 @@ También implicaba que los hombres debían casarse con una mujer joven para evit
 Old Maid se juega con una baraja estándar de 52 cartas. Se consideraba que la reina negra era la vieja solterona. 
 Una de las otras tres reinas se eliminó del mazo para asegurarse de que la carta de Old Maid no coincidiera.
 
+###Protocolo
+
+    dprotocol = {
+        'type': 'cardPick',
+        'oldmaid': oldmaid
+    }
+
+    dprotocol = {
+        'type': 'room',
+        'type2': type_msg,
+        'roomID': roomid,
+        'players': players
+    }
+
+    dprotocol = {
+        'type': 'useraccepted',
+        'username': username,
+        'roomID': 1
+    }
+
+    room = {
+        "players": [client],
+        "time_connection": [time]
+    }
+
+    dprotocol = {
+        'type': 'message',
+        'username': username,
+        'message': message
+    }
+
+    dprotocol = {
+            'type': 'you_can_play_now',
+            'players': OldMaid.getPlayers(),
+            'oldmaid': OldMaid
+        }
+
+    dprotocol = {
+        'type': 'all_pairs_down',
+        'oldmaid': oldmaid
+    }
+
+    dprotocol = {
+        'type': 'pairsOk',
+        'oldmaid': oldmaid
+    }
+
+    dprotocol = {
+        'type': 'signin',
+        'username': my_username
+    }
+
+    dprotocol = {
+        "type":"signinok",
+        "username":username,
+        "roomID":roomID,
+        "winner": 0,
+        "turn": 0,
+        "hand": []
+    }
+
+    dprotocol = {
+        "type": "roomid",
+        "username": my_username,
+        "roomid": roomID
+    }
+
+    dprotocol = {
+        "type":msgtype,
+        "message": message,
+        "username": username
+    }
+
+    dprotocol = {
+        "type":'updateMessage',
+        "hand": hand,
+        "username": username,
+        'hasQueen': hasQueen,
+        'numTurn': numTurn
+    }
+
+    dprotocol = {
+        "type":"sendpair",
+        'pair': pair,
+        'hand': hand
+    }
+
+    dprotocol = {
+        "type":'im_done',
+        "room_id": roomid,
+        "username": username,
+        "hand": hand
+    }
+
+    dprotocol = {
+        "type":"pickCard",
+        'cardpos': cardpos,
+        'room_id': roomid
+    }
+
+    dprotocol = {
+        'type':"error",
+        'error': error
+    }
 
 ### Instalaciones:
 No se requiere la instalación de ninguna librería ya que las utilizadas vienen en el estándar. 
