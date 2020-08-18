@@ -31,6 +31,8 @@ lock = threading.RLock()
 #un lock para cada variable ¿? no sé 
 game_lock = threading.RLock()
 primeraBajada = True
+cardPicked = False
+myPairsOk = False
 
 dummy = []
 for i in range(3):
@@ -164,11 +166,12 @@ def im_done(roomid,hand,username):
     client_socket.send(msg)
 
 
-def pickCard(cardpos):
+def pickCard(client_socket,cardpos,roomid):
     """ Esta funcion le manda la carta que escoge de la mano del contrincante"""
     dprotocol = {
         "type":"pickCard",
-        'cardpos': cardpos
+        'cardpos': cardpos,
+        'room_id': roomid
     }
     # serializing dprotocol
     msg = pickle.dumps(dprotocol)
@@ -233,7 +236,9 @@ def thread_function(my_username):
     global pairs_not_down
     global not_my_turn
     global players_in_ma_room
+    global cardPicked
     global serverOldMaid
+    global myPairsOk
     while True:
         message = receive_message(client_socket)
         if message:
@@ -260,10 +265,36 @@ def thread_function(my_username):
                 pairs_not_down = False
             elif (message['data']['type'] == 'your_turn'):
                 not_my_turn = False
+            elif (message['data']['type'] == 'cardPick'):
+                serverOldMaid = message['data']['oldmaid']
+                cardPicked = True
+            elif (message['data']['type'] == 'pairsOk'):
+                print('recibio un pairsOk')
+                serverOldMaid = message['data']['oldmaid']
+                myPairsOk = True
+                if message['data']['oldmaid'].getPlayers()[message['data']['oldmaid'].getPlayerTurn()]['username'] == my_username:
+                    not_my_turn = False
+
+                
+                
         if breakmech:
             break
 
-def pairs_down(game_oldmaid, playerIndex, my_username,roomid):
+def my_pair(roomid,hand, my_username):
+    dprotocol = {
+        "type":'my_pair',
+        "room_id": roomid,
+        "username": my_username,
+        "hand": hand
+    }
+    # serializing dprotocol
+    msg = pickle.dumps(dprotocol)
+    # adding header to msg
+    msg = bytes(f"{len(msg):<{HEADER_LENGTH}}", "utf-8") + msg
+    client_socket.send(msg)
+
+
+def pairs_down(game_oldmaid, playerIndex, my_username,roomid,firstdown = True):
     """Esta funcion es la encargada de la jugabilidad de bajar las parejas de cartas"""
     #no hay progra defensiva todavia
     hand = []
@@ -294,10 +325,14 @@ def pairs_down(game_oldmaid, playerIndex, my_username,roomid):
     print("  _| |__| |")
     print(" (_)_____/ \n")
 
-
-    im_done(roomid,hand,my_username)
+    if firstdown:
+        im_done(roomid,hand,my_username)
+    else:
+        my_pair(roomid,hand,my_username)
 
     return True
+
+
 
 
 def client_on():
@@ -307,6 +342,7 @@ def client_on():
     global pairs_not_down
     global not_my_turn
     global primeraBajada
+    global cardPicked
     client_off = False
     signedin = False
     game_on = True
@@ -419,21 +455,33 @@ def client_on():
                         print(f"{status3['oponent']['username']} tiene {len(status3['oponent']['hand'])} cartas")
                         visualization = list(itertools.product(range(len(status3['oponent']['hand'])),['carta desconocida']))                        
                         print("\n\n", visualization)
-                        decition = int(input("¿que carta deseas quitar al oponente? (? empieza en 0) "))
+                        decition = input("¿que carta deseas quitar al oponente? (? empieza en 0) ")
                         while decition_flag:
-                            if decition > len(status['oponent']['hand']):
+                            if int(decition) > len(status['oponent']['hand']):
                                 print("\n¡tu oponente no tiene tantas cartas!")
-                                decition = int(input("¿que carta deseas quitar al oponente? (? empieza en 0) "))
+                                decition = input("¿que carta deseas quitar al oponente? (? empieza en 0) ")
                             else:
                                 decition_flag = False
-                        game_oldmaid.move(decition)
-                        pairs_down(game_oldmaid, playerIndex, my_username, roomid)
+                        print('antes del pickCard')
+                        pickCard(client_socket,int(decition),roomid)
+                        print('despues del pickCard')
+                        while not cardPicked:
+                            continue
+                        game_oldmaid = serverOldMaid
+                        cardPicked = False
+                        pairs_down(game_oldmaid, playerIndex, my_username, roomid,False)
+                        while not myPairsOk:
+                            continue
+                        print('se acabo el while mypairsok')
+                        game_oldmaid = serverOldMaid
                         not_my_turn = True
                     else:
                         print(f"!---- AHORA ES EL TURNO DE {status['player_in_turn']['username']}")
+                        
 
-                    while not_my_turn:
-                        continue
+                        while not_my_turn:
+                            game_oldmaid = serverOldMaid
+                            continue
 
                 #game_function()
                 # ------------------------------ AQUI TERMINA OLD MAID ------------------------------

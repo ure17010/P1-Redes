@@ -48,7 +48,7 @@ def receive_message(client_socket):
     except:
         return False
 
-def cardPick(oldmaid):
+def cardPick(notified_socket,oldmaid):
     """Función que avisa al cliente si se unio a un grupo o creo uno nuevo"""
     dprotocol = {
         'type': 'cardPick',
@@ -59,7 +59,7 @@ def cardPick(oldmaid):
     # adding header to msg
     msg = bytes(f"{len(msg):<{HEADER_LENGTH}}", "utf-8") + msg
     #print(msg)
-    client_socket.send(msg)
+    notified_socket.send(msg)
     
     return True
 
@@ -209,6 +209,21 @@ def all_done(client_socket,oldmaid):
         cl.send(msg)
     return True
 
+def pairsOk(client_socket,oldmaid):
+    """Función para avisar que todos bajaron sus cartas"""
+    dprotocol = {
+        'type': 'pairsOk',
+        'oldmaid': oldmaid
+    }
+    
+    msg = pickle.dumps(dprotocol)
+    # adding header to msg
+    msg = bytes(f"{len(msg):<{HEADER_LENGTH}}", "utf-8") + msg
+    #print(msg)
+    for cl in clients:
+        cl.send(msg)
+    return True
+
 def server_on():
     off = False
     cont = 0
@@ -260,6 +275,20 @@ def server_on():
                         broadcast(user['username'], message['data']['message'], user['roomID'])
                     elif message['data']['type'] == 'roomid':
                         rooms_management(notified_socket, message, message['data']['roomid'])
+                    elif message['data']['type'] == 'my_pair':
+                        print('entro al my pair')
+                        roomid = message['data']['room_id']
+                        for rm in rooms:
+                            if rooms[rm]['players'][0]['roomID'] == roomid:
+                                for player in rooms[rm]['players']:
+                                    if player['username'] == message['data']['username']:
+                                        print(f"HAND: {message['data']['hand']}")
+                                        rooms[rm]['oldmaid'].setHand(message['data']['username'],message['data']['hand'])
+                                        #print(rooms[rm]['oldmaid'].getPlayers())
+                                        rooms[rm]['oldmaid'].nextTurn()
+                                        pairsOk(notified_socket,rooms[rm]['oldmaid'])
+
+                                        
                     elif message['data']['type'] == 'im_done':
                         cont += 1
                         roomid = message['data']['room_id']
@@ -270,6 +299,7 @@ def server_on():
                                         print(f"HAND: {message['data']['hand']}")
                                         rooms[rm]['oldmaid'].setHand(message['data']['username'],message['data']['hand'])
                                         print(rooms[rm]['oldmaid'].getPlayers())
+                                        
 
                         if cont == 3:
                             for rm in rooms:
@@ -279,10 +309,12 @@ def server_on():
 
                             cont = 0
                     elif message['data']['type'] == 'pickCard':
+                        print('entro un pickCard')
                         roomid = message['data']['room_id']
                         for rm in rooms:
                             if rooms[rm]['players'][0]['roomID'] == roomid:
                                 rooms[rm]['oldmaid'].move(message['data']['cardpos'])
+                                cardPick(notified_socket, rooms[rm]['oldmaid'])
 
                     elif message['data']['type'] == 'hand':
                         rooms_management(notified_socket, message, message['data']['hand'])

@@ -23,9 +23,11 @@ class OldMaid(object):
                         print('Se llamo el shuffle')
                         self.shuffle()
         # Funcion que genera un deck, lo revuelve y reparte cartas a cada jugador
+        def getPlayerTurn(self):
+                return self.playerTurn
         def shuffle(self):
                 # crea deck
-                deck = list(itertools.product(range(1,7),['\u2660', '\u2661', '\u2662', '\u2663']))
+                deck = list(itertools.product(range(1,5),['\u2660', '\u2661', '\u2662', '\u2663']))
                 # revuelve deck
                 random.shuffle(deck)
                 # quita las Qs: 12
@@ -44,6 +46,7 @@ class OldMaid(object):
                         else: player += 1
 
         def nextTurn(self):
+                print('cambio de turno')
                 if self.playerTurn == 2:
                         self.playerTurn = 0
                 else: self.playerTurn += 1
