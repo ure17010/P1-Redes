@@ -141,10 +141,14 @@ Ip: 18.222.142.27
 Se ha implementado el uso de Amazon Web Services (aws). 
 Esto para montar el servidor en la nube y se incluyen todos los datos de conexión.
 
-#### Para correr el servidor
+#### Para correr el servidor en local
 
     python server-test.py
 
-#### Para correr el cliente
+#### Para correr el cliente en local 
 
     python client-test.py
+
+#### Para correr el cliente con el servidor en amazon ec2 
+
+    python client-cloud.py
