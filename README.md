@@ -13,7 +13,7 @@ También implicaba que los hombres debían casarse con una mujer joven para evit
 Old Maid se juega con una baraja estándar de 52 cartas. Se consideraba que la reina negra era la vieja solterona. 
 Una de las otras tres reinas se eliminó del mazo para asegurarse de que la carta de Old Maid no coincidiera.
 
-###Protocolo
+### Protocolo
 
     dprotocol = {
         'type': 'cardPick',
@@ -141,4 +141,10 @@ Ip: 18.222.142.27
 Se ha implementado el uso de Amazon Web Services (aws). 
 Esto para montar el servidor en la nube y se incluyen todos los datos de conexión.
 
-#### Corriendo cliente.py para cada uno de los usuarios, seguir instrucciones para cada uno.
+#### Para correr el servidor
+
+    python server-test.py
+
+#### Para correr el cliente
+
+    python client-test.py
