@@ -15,12 +15,21 @@ import pickle
 import threading
 import time
 import itertools
+import argparse
 #Importamos clase OldMaid()
 import oldmaid as om
+
+# Section of input arguments
+par=argparse.ArgumentParser(description='This script works as a server for Old Maid socket based game')
+par.add_argument('--ip','-i',dest='ip',type=str,help='IP to bind. Write it between \' \'.',default="127.0.0.1")
+par.add_argument('--port','-p',dest='port',type=int,help='Port to bind',default=5555)
+args=par.parse_args()
+
+
 # variables globales
 HEADER_LENGTH = 10 
-IP = "127.0.0.1"
-PORT = 5555
+IP = args.ip
+PORT = args.port
 breakmech = False
 flag_room = False
 pairs_not_down = True

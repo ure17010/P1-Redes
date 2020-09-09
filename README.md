@@ -145,9 +145,21 @@ Esto para montar el servidor en la nube y se incluyen todos los datos de conexi�
 
     python server-test.py
 
+#### Para correr el servidor en dirección predeterminada
+
+    python server-test.py -i 'X.X.X.X' -p 5555
+    python server-test.py --ip 'IP HERE' --port PORTHERE
+
+
 #### Para correr el cliente en local 
 
     python client-test.py
+
+#### Para correr el cliente en dirección predeterminada 
+
+    python client-test.py -i 'X.X.X.X' -p 5555
+    python client-test.py --ip 'IP HERE' --port PORTHERE
+
 
 #### Para correr el cliente con el servidor en amazon ec2 
 
